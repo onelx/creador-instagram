@@ -20,33 +20,37 @@ module.exports = async function handler(req, res) {
     const textPrompt = buildTextPrompt(prompt)
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          instances: [{ prompt: textPrompt }],
-          parameters: {
-            sampleCount: 1,
-            aspectRatio: '1:1',
-            safetyFilterLevel: 'block_few',
-            personGeneration: 'allow_adult'
-          }
+          contents: [{ parts: [{ text: textPrompt }] }],
+          generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
         }),
         signal: AbortSignal.timeout(60000)
       }
     )
 
     if (!response.ok) {
-      const err = await response.json()
+      const err = await response.json().catch(() => ({}))
       throw new Error(err.error?.message || `Gemini error ${response.status}`)
     }
 
     const data = await response.json()
-    const b64 = data.predictions?.[0]?.bytesBase64Encoded
-    if (!b64) throw new Error('No image returned from Gemini')
 
-    res.json({ ok: true, imageBase64: b64, mimeType: 'image/png', prompt: textPrompt })
+    // Find the image part in the response
+    const parts = data.candidates?.[0]?.content?.parts || []
+    const imagePart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'))
+
+    if (!imagePart) throw new Error('No image returned from Gemini')
+
+    res.json({
+      ok: true,
+      imageBase64: imagePart.inlineData.data,
+      mimeType: imagePart.inlineData.mimeType,
+      prompt: textPrompt
+    })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: err.message || 'Error generating image' })
