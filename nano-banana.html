@@ -18,6 +18,7 @@
       --error: #ef4444;
       --gemini: #4285f4;
       --palette: #a78bfa;
+      --transfer: #10b981;
     }
     body {
       font-family: 'SF Mono', 'Fira Code', monospace;
@@ -47,6 +48,12 @@
     }
     .gemini-badge {
       background: var(--gemini); color: #fff;
+      font-size: 0.58rem; font-weight: 700;
+      letter-spacing: 0.1em; padding: 3px 8px;
+      border-radius: 4px; text-transform: uppercase;
+    }
+    .transfer-badge {
+      background: var(--transfer); color: #000;
       font-size: 0.58rem; font-weight: 700;
       letter-spacing: 0.1em; padding: 3px 8px;
       border-radius: 4px; text-transform: uppercase;
@@ -121,13 +128,14 @@
     .mode-btn {
       flex: 1; border: none; border-radius: 6px;
       background: transparent; color: var(--muted);
-      font-family: inherit; font-size: 0.65rem;
-      font-weight: 600; letter-spacing: 0.05em;
-      padding: 6px 8px; cursor: pointer;
+      font-family: inherit; font-size: 0.6rem;
+      font-weight: 600; letter-spacing: 0.04em;
+      padding: 6px 4px; cursor: pointer;
       transition: all 0.2s; text-transform: uppercase;
     }
     .mode-btn.active { background: var(--border); color: var(--text); }
     .mode-btn.active.mix { background: var(--palette); color: #fff; }
+    .mode-btn.active.transfer { background: var(--transfer); color: #000; }
 
     /* ── Image slots ── */
     .img-slots { display: flex; flex-direction: column; gap: 10px; }
@@ -139,12 +147,14 @@
     }
     .slot-label.subject { color: var(--accent); }
     .slot-label.palette { color: var(--palette); }
+    .slot-label.transfer-src { color: var(--transfer); }
     .slot-badge {
       font-size: 0.55rem; padding: 2px 6px;
       border-radius: 3px; font-weight: 700;
     }
     .slot-badge.subject { background: rgba(245,197,24,0.15); color: var(--accent); }
     .slot-badge.palette { background: rgba(167,139,250,0.15); color: var(--palette); }
+    .slot-badge.transfer-src { background: rgba(16,185,129,0.15); color: var(--transfer); }
 
     /* ── Dropzone ── */
     .dropzone {
@@ -158,12 +168,13 @@
       background: var(--surface);
     }
     .dropzone.dz-subject:hover, .dropzone.dz-subject.drag-over {
-      border-color: var(--accent);
-      background: rgba(245,197,24,0.04);
+      border-color: var(--accent); background: rgba(245,197,24,0.04);
     }
     .dropzone.dz-palette:hover, .dropzone.dz-palette.drag-over {
-      border-color: var(--palette);
-      background: rgba(167,139,250,0.04);
+      border-color: var(--palette); background: rgba(167,139,250,0.04);
+    }
+    .dropzone.dz-transfer:hover, .dropzone.dz-transfer.drag-over {
+      border-color: var(--transfer); background: rgba(16,185,129,0.04);
     }
     .dropzone input[type="file"] {
       position: absolute; inset: 0;
@@ -187,6 +198,21 @@
     .img-meta .iname { font-size: 0.63rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%; }
     .img-meta .isize { font-size: 0.6rem; color: var(--muted); }
 
+    /* ── Info banners ── */
+    .info-banner {
+      display: none;
+      border-radius: 8px; padding: 10px 12px;
+      font-size: 0.65rem;
+      font-family: -apple-system, sans-serif; line-height: 1.6;
+    }
+    .info-banner strong { display: block; margin-bottom: 2px; font-family: inherit; }
+    .info-banner.mix {
+      background: rgba(167,139,250,0.08); border: 1px solid rgba(167,139,250,0.2); color: var(--palette);
+    }
+    .info-banner.transfer {
+      background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); color: var(--transfer);
+    }
+
     /* ── Buttons ── */
     .btn {
       border: none; border-radius: 8px; cursor: pointer;
@@ -199,6 +225,8 @@
     .btn-yellow:hover:not(:disabled) { background: var(--accent2); transform: translateY(-1px); }
     .btn-purple { background: var(--palette); color: #fff; }
     .btn-purple:hover:not(:disabled) { background: #9061f0; transform: translateY(-1px); }
+    .btn-green { background: var(--transfer); color: #000; }
+    .btn-green:hover:not(:disabled) { background: #0da271; transform: translateY(-1px); }
     .btn-blue { background: var(--gemini); color: #fff; }
     .btn-blue:hover:not(:disabled) { background: #3b78e7; transform: translateY(-1px); }
     .btn-ghost {
@@ -219,41 +247,64 @@
       display: none;
     }
     .spinner.white { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
+    .spinner.dark { border-color: rgba(0,0,0,0.15); border-top-color: #000; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Mix info banner ── */
-    .mix-info {
-      display: none;
-      background: rgba(167,139,250,0.08);
-      border: 1px solid rgba(167,139,250,0.2);
+    /* ── Intensity slider ── */
+    .slider-wrap {
+      display: none; flex-direction: column; gap: 6px;
+      background: var(--surface); border: 1px solid var(--border);
       border-radius: 8px; padding: 10px 12px;
-      font-size: 0.65rem; color: var(--palette);
-      font-family: -apple-system, sans-serif; line-height: 1.6;
     }
-    .mix-info strong { display: block; margin-bottom: 2px; font-family: inherit; }
+    .slider-wrap label {
+      font-size: 0.62rem; color: var(--muted); letter-spacing: 0.08em;
+      text-transform: uppercase; display: flex; justify-content: space-between;
+    }
+    .slider-wrap label span { color: var(--transfer); font-weight: 700; }
+    input[type=range] {
+      width: 100%; accent-color: var(--transfer); cursor: pointer;
+    }
+
+    /* ── Color palette swatches ── */
+    .palette-section {
+      display: none; flex-direction: column; gap: 10px;
+    }
+    .palette-title {
+      font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+    }
+    .swatches { display: flex; gap: 4px; flex-wrap: wrap; }
+    .swatch {
+      width: 32px; height: 32px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+    .img-compare {
+      display: flex; gap: 8px;
+    }
+    .img-compare > div {
+      flex: 1; display: flex; flex-direction: column; gap: 4px;
+    }
+    .img-compare img { width: 100%; border-radius: 6px; object-fit: cover; height: 120px; }
+    .img-compare p { font-size: 0.58rem; color: var(--muted); text-align: center; font-family: -apple-system, sans-serif; }
 
     /* ── Status dot ── */
     .status-dot {
       width: 7px; height: 7px;
-      border-radius: 50%; background: var(--border);
-      flex-shrink: 0;
+      border-radius: 50%; background: var(--border); flex-shrink: 0;
     }
     .status-dot.ready { background: var(--success); }
     .status-dot.loading { background: var(--accent); animation: pulse 1s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
     /* ── JSON output ── */
-    .json-tree {
-      font-size: 0.72rem; line-height: 1.8;
-      white-space: pre; overflow-x: auto;
-    }
+    .json-tree { font-size: 0.72rem; line-height: 1.8; white-space: pre; overflow-x: auto; }
     .json-key { color: #a78bfa; }
     .json-str { color: #6ee7b7; }
     .json-num { color: #fbbf24; }
     .json-bool { color: #f472b6; }
     .json-null { color: var(--muted); }
 
-    /* ── Generated image ── */
+    /* ── Generated / Transfer result image ── */
     #gen-image-wrap { display: none; flex-direction: column; gap: 12px; }
     .gen-img { width: 100%; border-radius: 12px; display: block; box-shadow: 0 8px 40px rgba(0,0,0,0.5); }
     .gen-actions { display: flex; gap: 8px; }
@@ -270,8 +321,7 @@
     /* ── Error box ── */
     .err-box {
       display: none;
-      background: rgba(239,68,68,0.08);
-      border: 1px solid rgba(239,68,68,0.25);
+      background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25);
       border-radius: 8px; padding: 12px 16px;
       font-size: 0.72rem; color: var(--error);
       font-family: -apple-system, sans-serif; line-height: 1.6;
@@ -280,14 +330,10 @@
     /* ── Prompt preview ── */
     .prompt-preview {
       display: none;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
-      font-size: 0.65rem;
-      color: var(--muted);
-      line-height: 1.6;
-      font-family: -apple-system, sans-serif;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 14px;
+      font-size: 0.65rem; color: var(--muted);
+      line-height: 1.6; font-family: -apple-system, sans-serif;
     }
     .prompt-preview strong { color: var(--text); display: block; margin-bottom: 4px; font-family: inherit; }
 
@@ -309,6 +355,7 @@
   <div class="logo">Nano <span>Banana</span> Pro</div>
   <div class="badge">JSON</div>
   <div class="gemini-badge">+ Imagen</div>
+  <div class="transfer-badge">+ Color Transfer</div>
 </header>
 
 <main>
@@ -318,7 +365,7 @@
     <div class="panel-header">
       <div class="panel-title">
         <div class="step-num active" id="step1">1</div>
-        Images
+        <span id="p1-title">Images</span>
       </div>
     </div>
     <div class="panel-body">
@@ -326,33 +373,39 @@
       <!-- Mode toggle -->
       <div class="mode-toggle">
         <button class="mode-btn active" id="mode-single" onclick="setMode('single')">📷 Single</button>
-        <button class="mode-btn" id="mode-mix" onclick="setMode('mix')">🎨 Mix Colors</button>
+        <button class="mode-btn" id="mode-mix" onclick="setMode('mix')">🎨 Mix</button>
+        <button class="mode-btn" id="mode-transfer" onclick="setMode('transfer')">🔬 Transfer</button>
       </div>
 
-      <!-- Mix info -->
-      <div class="mix-info" id="mix-info">
+      <!-- Info banners -->
+      <div class="info-banner mix" id="mix-info">
         <strong>Color Mix Mode</strong>
-        Image 1 → extract color palette &amp; style<br>
-        Image 2 → extract subject &amp; composition
+        Image 1 → subject &amp; composition<br>
+        Image 2 → color palette &amp; style → Claude generates JSON
+      </div>
+      <div class="info-banner transfer" id="transfer-info">
+        <strong>Color Transfer (sin IA)</strong>
+        Mantiene la imagen 1 exacta — solo le aplica los tonos de la imagen 2.<br>
+        Procesamiento local, instantáneo.
       </div>
 
       <!-- Image slots -->
       <div class="img-slots">
 
-        <!-- SLOT 1: Subject (always visible) -->
-        <div class="img-slot" id="slot1">
+        <!-- SLOT 1 -->
+        <div class="img-slot">
           <div class="slot-label subject" id="slot1-label">
-            📷 <span>Reference Image</span>
-            <span class="slot-badge subject" id="slot1-badge">SUBJECT</span>
+            <span id="slot1-icon">📷</span>
+            <span id="slot1-text">Reference Image</span>
+            <span class="slot-badge subject" id="slot1-badge" style="display:none">SUBJECT</span>
           </div>
           <div class="dropzone dz-subject" id="dropzone1">
             <input type="file" id="file-input1" accept="image/jpeg,image/png,image/webp,image/gif" />
             <div class="dz-icon">🍌</div>
-            <h3>Drop image here</h3>
+            <h3 id="dz1-title">Drop image here</h3>
             <p>or click to browse · paste ⌘V</p>
             <div class="fmts">
-              <span class="fmt">JPG</span><span class="fmt">PNG</span>
-              <span class="fmt">WEBP</span>
+              <span class="fmt">JPG</span><span class="fmt">PNG</span><span class="fmt">WEBP</span>
             </div>
           </div>
           <div class="preview-slot" id="preview1">
@@ -365,20 +418,20 @@
           </div>
         </div>
 
-        <!-- SLOT 2: Color palette (only in mix mode) -->
+        <!-- SLOT 2 (mix + transfer modes) -->
         <div class="img-slot" id="slot2" style="display:none">
-          <div class="slot-label palette">
-            🎨 <span>Color / Style Reference</span>
-            <span class="slot-badge palette">PALETTE</span>
+          <div class="slot-label palette" id="slot2-label">
+            <span id="slot2-icon">🎨</span>
+            <span id="slot2-text">Color / Style Reference</span>
+            <span class="slot-badge palette" id="slot2-badge">PALETTE</span>
           </div>
           <div class="dropzone dz-palette" id="dropzone2">
             <input type="file" id="file-input2" accept="image/jpeg,image/png,image/webp,image/gif" />
-            <div class="dz-icon">🖌️</div>
-            <h3>Drop color reference</h3>
-            <p>Its palette will be applied to image 1</p>
+            <div class="dz-icon" id="dz2-icon">🖌️</div>
+            <h3 id="dz2-title">Drop color reference</h3>
+            <p id="dz2-desc">Its palette will be applied</p>
             <div class="fmts">
-              <span class="fmt">JPG</span><span class="fmt">PNG</span>
-              <span class="fmt">WEBP</span>
+              <span class="fmt">JPG</span><span class="fmt">PNG</span><span class="fmt">WEBP</span>
             </div>
           </div>
           <div class="preview-slot" id="preview2">
@@ -393,71 +446,101 @@
 
       </div><!-- /img-slots -->
 
+      <!-- Intensity slider (transfer mode only) -->
+      <div class="slider-wrap" id="intensity-wrap">
+        <label>Intensidad <span id="intensity-val">100%</span></label>
+        <input type="range" id="intensity" min="0" max="100" value="100"
+          oninput="document.getElementById('intensity-val').textContent = this.value + '%'" />
+      </div>
+
       <div id="p1-error" class="err-box"></div>
 
-      <button class="btn btn-yellow" id="btn-analyze" onclick="generatePrompt()" disabled>
-        <div class="spinner" id="sp1"></div>
+      <button class="btn btn-yellow" id="btn-analyze" onclick="handleMainAction()" disabled>
+        <div class="spinner dark" id="sp1"></div>
         <span id="btn-analyze-txt">⚡ Analyze & Generate JSON</span>
       </button>
 
     </div>
   </div>
 
-  <!-- PANEL 2: JSON -->
+  <!-- PANEL 2: JSON / Palette -->
   <div class="panel">
     <div class="panel-header">
       <div class="panel-title">
         <div class="step-num" id="step2">2</div>
-        JSON Prompt
+        <span id="p2-title">JSON Prompt</span>
       </div>
       <div style="display:flex;gap:6px" id="json-actions">
         <button class="btn btn-ghost btn-sm" id="btn-copy" onclick="copyJSON()" style="display:none">📋 Copy</button>
         <button class="btn btn-ghost btn-sm" id="btn-dl" onclick="downloadJSON()" style="display:none">⬇ Save</button>
       </div>
     </div>
-    <div class="panel-body" id="json-panel-body">
+    <div class="panel-body">
 
-      <div class="empty" id="json-empty">
-        <div class="eicon">{ }</div>
-        <p>Upload a reference image and analyze it to get the JSON prompt here.</p>
+      <!-- JSON view (single + mix) -->
+      <div id="json-section">
+        <div class="empty" id="json-empty">
+          <div class="eicon">{ }</div>
+          <p>Upload a reference image and analyze it to get the JSON prompt here.</p>
+        </div>
+        <div id="json-output" style="display:none">
+          <pre class="json-tree" id="json-tree"></pre>
+        </div>
       </div>
 
-      <div id="json-output" style="display:none">
-        <pre class="json-tree" id="json-tree"></pre>
+      <!-- Palette view (transfer mode) -->
+      <div class="palette-section" id="palette-section">
+        <div class="empty" id="palette-empty">
+          <div class="eicon">🎨</div>
+          <p>Upload both images and click <strong>Transfer Colors</strong> to see the result.</p>
+        </div>
+        <div id="palette-result" style="display:none">
+          <p class="palette-title">Color palette extracted</p>
+          <div class="swatches" id="swatches"></div>
+          <div class="img-compare" id="img-compare" style="margin-top:12px">
+            <div>
+              <img id="compare-before" src="" />
+              <p>Before</p>
+            </div>
+            <div>
+              <img id="compare-after" src="" />
+              <p>After</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="p2-error" class="err-box"></div>
-
     </div>
   </div>
 
-  <!-- PANEL 3: Generated Image -->
+  <!-- PANEL 3: Generated / Transferred Image -->
   <div class="panel">
     <div class="panel-header">
       <div class="panel-title">
         <div class="step-num" id="step3">3</div>
-        Generated Image
+        <span id="p3-title">Generated Image</span>
       </div>
       <div style="display:flex;gap:6px;align-items:center">
         <div class="status-dot" id="gen-dot"></div>
-        <span style="font-size:0.62rem;color:var(--muted)" id="gen-status">Waiting for JSON</span>
+        <span style="font-size:0.62rem;color:var(--muted)" id="gen-status">Waiting</span>
       </div>
     </div>
     <div class="panel-body">
 
       <div class="empty" id="gen-empty">
-        <div class="eicon">🎨</div>
-        <p>Once you have the JSON prompt, click <strong>Generate Image</strong> to create with Gemini.</p>
+        <div class="eicon" id="gen-empty-icon">🎨</div>
+        <p id="gen-empty-txt">Once you have the JSON prompt, click <strong>Generate Image</strong> to create with Gemini.</p>
       </div>
 
       <div id="gen-image-wrap">
-        <img class="gen-img" id="gen-img" src="" alt="generated" />
+        <img class="gen-img" id="gen-img" src="" alt="result" />
         <div class="prompt-preview" id="prompt-preview">
           <strong>Prompt sent to Gemini:</strong>
           <span id="prompt-text"></span>
         </div>
         <div class="gen-actions">
-          <button class="btn btn-blue" id="btn-regen" onclick="generateImage()" style="flex:1">
+          <button class="btn btn-blue" id="btn-regen" onclick="generateImage()" style="flex:1;display:none">
             <div class="spinner white" id="sp3"></div>
             <span id="btn-regen-txt">🔄 Regenerate</span>
           </button>
@@ -465,6 +548,7 @@
         </div>
       </div>
 
+      <!-- Gemini generate button (single + mix) -->
       <button class="btn btn-blue" id="btn-gen-img" onclick="generateImage()" disabled style="flex-shrink:0">
         <div class="spinner white" id="sp2"></div>
         <span id="btn-gen-txt">🎨 Generate Image</span>
@@ -483,51 +567,107 @@
   let currentFile2 = null
   let currentJSON = null
   let currentImageB64 = null
-  let mode = 'single' // 'single' | 'mix'
+  let mode = 'single'
 
   // ── Mode toggle ──────────────────────────────────────────────
   function setMode(m) {
     mode = m
-    document.getElementById('mode-single').className = 'mode-btn' + (m === 'single' ? ' active' : '')
-    document.getElementById('mode-mix').className = 'mode-btn' + (m === 'mix' ? ' active mix' : '')
-    document.getElementById('slot2').style.display = m === 'mix' ? 'flex' : 'none'
-    document.getElementById('mix-info').style.display = m === 'mix' ? 'block' : 'none'
-    const label = document.getElementById('slot1-label')
-    const badge = document.getElementById('slot1-badge')
-    if (m === 'mix') {
-      label.querySelector('span').textContent = 'Subject / Content'
-      badge.style.display = 'inline'
+    const isTransfer = m === 'transfer'
+    const isMix = m === 'mix'
+    const isSingle = m === 'single'
+
+    // toggle buttons
+    document.getElementById('mode-single').className = 'mode-btn' + (isSingle ? ' active' : '')
+    document.getElementById('mode-mix').className    = 'mode-btn' + (isMix ? ' active mix' : '')
+    document.getElementById('mode-transfer').className = 'mode-btn' + (isTransfer ? ' active transfer' : '')
+
+    // show/hide slot 2
+    document.getElementById('slot2').style.display = isSingle ? 'none' : 'flex'
+
+    // info banners
+    document.getElementById('mix-info').style.display = isMix ? 'block' : 'none'
+    document.getElementById('transfer-info').style.display = isTransfer ? 'block' : 'none'
+
+    // intensity slider
+    document.getElementById('intensity-wrap').style.display = isTransfer ? 'flex' : 'none'
+
+    // slot 1 label
+    if (isMix) {
+      document.getElementById('slot1-text').textContent = 'Subject / Content'
+      document.getElementById('slot1-badge').style.display = 'inline'
+      document.getElementById('slot1-badge').className = 'slot-badge subject'
+      document.getElementById('slot1-label').className = 'slot-label subject'
+    } else if (isTransfer) {
+      document.getElementById('slot1-text').textContent = 'Imagen a modificar'
+      document.getElementById('slot1-badge').style.display = 'none'
+      document.getElementById('slot1-label').className = 'slot-label transfer-src'
     } else {
-      label.querySelector('span').textContent = 'Reference Image'
-      badge.style.display = 'none'
+      document.getElementById('slot1-text').textContent = 'Reference Image'
+      document.getElementById('slot1-badge').style.display = 'none'
+      document.getElementById('slot1-label').className = 'slot-label subject'
     }
+
+    // slot 2 label / dropzone style for transfer
+    if (isTransfer) {
+      document.getElementById('slot2-text').textContent = 'Imagen con los colores'
+      document.getElementById('slot2-badge').textContent = 'PALETTE'
+      document.getElementById('slot2-label').className = 'slot-label palette'
+      document.getElementById('dz2-title').textContent = 'Drop color reference'
+      document.getElementById('dz2-desc').textContent  = 'Sus tonos se aplicarán a la imagen 1'
+      document.getElementById('dropzone2').className   = 'dropzone dz-transfer'
+    } else {
+      document.getElementById('slot2-text').textContent = 'Color / Style Reference'
+      document.getElementById('slot2-badge').textContent = 'PALETTE'
+      document.getElementById('slot2-label').className  = 'slot-label palette'
+      document.getElementById('dz2-title').textContent  = 'Drop color reference'
+      document.getElementById('dz2-desc').textContent   = 'Its palette will be applied to image 1'
+      document.getElementById('dropzone2').className    = 'dropzone dz-palette'
+    }
+
+    // panel 2: json vs palette
+    document.getElementById('json-section').style.display    = isTransfer ? 'none' : 'flex'
+    document.getElementById('palette-section').style.display = isTransfer ? 'flex' : 'none'
+    document.getElementById('p2-title').textContent = isTransfer ? 'Color Palette' : 'JSON Prompt'
+
+    // panel 3: gemini button vs nothing
+    document.getElementById('btn-gen-img').style.display = isTransfer ? 'none' : 'flex'
+    document.getElementById('btn-regen').style.display   = 'none'
+    document.getElementById('p3-title').textContent = isTransfer ? 'Result' : 'Generated Image'
+    document.getElementById('gen-empty-icon').textContent = isTransfer ? '🔬' : '🎨'
+    document.getElementById('gen-empty-txt').innerHTML = isTransfer
+      ? 'Upload both images and click <strong>Transfer Colors</strong>.'
+      : 'Once you have the JSON prompt, click <strong>Generate Image</strong> to create with Gemini.'
+
+    // reset results when switching mode
+    resetJSON(); resetImage()
     updateAnalyzeBtn()
-    updateAnalyzeBtnStyle()
   }
 
-  function updateAnalyzeBtnStyle() {
+  function updateAnalyzeBtn() {
+    const ready = (mode === 'single') ? !!currentFile1 : (!!currentFile1 && !!currentFile2)
     const btn = document.getElementById('btn-analyze')
-    if (mode === 'mix') {
+    btn.disabled = !ready
+
+    if (mode === 'transfer') {
+      btn.className = 'btn btn-green'
+      document.getElementById('btn-analyze-txt').textContent = ready ? '🔬 Transfer Colors' : '🔬 Transfer Colors'
+    } else if (mode === 'mix') {
       btn.className = 'btn btn-purple'
-      document.getElementById('btn-analyze-txt').textContent = currentFile1 && currentFile2
-        ? '🎨 Mix & Generate JSON'
-        : '⚡ Analyze & Generate JSON'
+      document.getElementById('btn-analyze-txt').textContent = '🎨 Mix & Generate JSON'
     } else {
       btn.className = 'btn btn-yellow'
       document.getElementById('btn-analyze-txt').textContent = '⚡ Analyze & Generate JSON'
     }
   }
 
-  function updateAnalyzeBtn() {
-    const ready = mode === 'mix' ? (currentFile1 && currentFile2) : !!currentFile1
-    document.getElementById('btn-analyze').disabled = !ready
-    updateAnalyzeBtnStyle()
+  function handleMainAction() {
+    if (mode === 'transfer') transferColors()
+    else generatePrompt()
   }
 
   // ── File inputs ──────────────────────────────────────────────
   setupDropzone('dropzone1', 'file-input1', 1)
   setupDropzone('dropzone2', 'file-input2', 2)
-
   document.addEventListener('paste', e => {
     for (const item of (e.clipboardData?.items || [])) {
       if (item.type.startsWith('image/')) { loadFile(item.getAsFile(), 1); break }
@@ -550,7 +690,6 @@
     if (!file.type.startsWith('image/')) return
     if (slot === 1) currentFile1 = file
     else currentFile2 = file
-
     const reader = new FileReader()
     reader.onload = e => {
       document.getElementById(`preview-img${slot}`).src = e.target.result
@@ -575,43 +714,31 @@
     if (slot === 1) { resetJSON(); resetImage(); setSteps(1) }
   }
 
-  // ── Step 1: Analyze → JSON ───────────────────────────────────
+  // ── Step 1: Generate JSON (single + mix) ─────────────────────
   async function generatePrompt() {
     if (!currentFile1) return
-    if (mode === 'mix' && !currentFile2) return
-
     const btn = document.getElementById('btn-analyze')
     const sp = document.getElementById('sp1')
     const txt = document.getElementById('btn-analyze-txt')
     clearError('p1-error'); clearError('p2-error')
-
-    btn.disabled = true; sp.style.display = 'block'
-    txt.textContent = 'Compressing…'
-
+    btn.disabled = true; sp.style.display = 'block'; txt.textContent = 'Compressing…'
     try {
       const b641 = await compressImage(currentFile1)
       let body = { imageBase64: b641, mediaType: 'image/jpeg', mode }
-
       if (mode === 'mix' && currentFile2) {
         txt.textContent = 'Compressing palette…'
-        const b642 = await compressImage(currentFile2)
-        body.paletteBase64 = b642
+        body.paletteBase64 = await compressImage(currentFile2)
       }
-
       txt.textContent = mode === 'mix' ? 'Mixing…' : 'Analyzing…'
-
       const res = await fetch(`${API}/api/json-prompt`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       })
-
       if (!res.ok) {
         let msg = `Server error ${res.status}`
         try { msg = (await res.json()).error || msg } catch {}
         throw new Error(msg)
       }
-
       const data = await res.json()
       currentJSON = data.prompt
       renderJSON(currentJSON)
@@ -621,57 +748,227 @@
       document.getElementById('btn-dl').style.display = 'flex'
       document.getElementById('btn-gen-img').disabled = false
       setSteps(2)
-
     } catch (err) {
       showError('p2-error', err.message)
     } finally {
-      btn.disabled = false; sp.style.display = 'none'
-      updateAnalyzeBtnStyle()
+      btn.disabled = false; sp.style.display = 'none'; updateAnalyzeBtn()
     }
+  }
+
+  // ── Color Transfer (LAB color space) ─────────────────────────
+  async function transferColors() {
+    if (!currentFile1 || !currentFile2) return
+    const btn = document.getElementById('btn-analyze')
+    const sp = document.getElementById('sp1')
+    btn.disabled = true; sp.style.display = 'block'
+    document.getElementById('btn-analyze-txt').textContent = 'Processing…'
+    clearError('p1-error')
+    setGenStatus('loading', 'Transferring colors…')
+
+    try {
+      const intensity = parseInt(document.getElementById('intensity').value) / 100
+
+      // Load both images into canvas
+      const [srcData, srcCanvas] = await loadImageData(currentFile1)
+      const [tgtData] = await loadImageData(currentFile2)
+
+      // Compute LAB stats from both
+      const srcStats = getLabStats(srcData)
+      const tgtStats = getLabStats(tgtData)
+
+      // Apply transfer
+      const resultData = applyColorTransfer(srcData, srcStats, tgtStats, intensity)
+
+      // Draw result to canvas and export
+      const canvas = document.createElement('canvas')
+      canvas.width = srcCanvas.width
+      canvas.height = srcCanvas.height
+      const ctx = canvas.getContext('2d')
+      ctx.putImageData(resultData, 0, 0)
+      const resultUrl = canvas.toDataURL('image/png')
+
+      // Extract palette swatches from target
+      const swatchColors = extractPalette(tgtData, 10)
+      renderSwatches(swatchColors)
+
+      // Show compare
+      document.getElementById('compare-before').src = document.getElementById('preview-img1').src
+      document.getElementById('compare-after').src = resultUrl
+
+      document.getElementById('palette-empty').style.display = 'none'
+      document.getElementById('palette-result').style.display = 'flex'
+      document.getElementById('palette-result').style.flexDirection = 'column'
+
+      // Show result in panel 3
+      currentImageB64 = resultUrl.split(',')[1]
+      document.getElementById('gen-img').src = resultUrl
+      document.getElementById('prompt-preview').style.display = 'none'
+      document.getElementById('btn-regen').style.display = 'none'
+      document.getElementById('gen-empty').style.display = 'none'
+      document.getElementById('gen-image-wrap').style.display = 'flex'
+      setGenStatus('ready', 'Transfer complete ✓')
+      setSteps(3)
+
+    } catch (err) {
+      showError('p1-error', err.message)
+      setGenStatus('', 'Error')
+    } finally {
+      btn.disabled = false; sp.style.display = 'none'; updateAnalyzeBtn()
+    }
+  }
+
+  function loadImageData(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        // Cap at 1200px for performance
+        let { width, height } = img
+        const MAX = 1200
+        if (width > MAX || height > MAX) {
+          const r = Math.min(MAX/width, MAX/height)
+          width = Math.round(width * r); height = Math.round(height * r)
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width; canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+        resolve([ctx.getImageData(0, 0, width, height), canvas])
+      }
+      img.onerror = reject; img.src = url
+    })
+  }
+
+  // ── LAB color space math ──────────────────────────────────────
+  function rgbToLab(r, g, b) {
+    // RGB [0-255] → XYZ → LAB
+    let rn = r/255, gn = g/255, bn = b/255
+    rn = rn > 0.04045 ? Math.pow((rn+0.055)/1.055, 2.4) : rn/12.92
+    gn = gn > 0.04045 ? Math.pow((gn+0.055)/1.055, 2.4) : gn/12.92
+    bn = bn > 0.04045 ? Math.pow((bn+0.055)/1.055, 2.4) : bn/12.92
+    let X = (rn*0.4124564 + gn*0.3575761 + bn*0.1804375) / 0.95047
+    let Y = (rn*0.2126729 + gn*0.7151522 + bn*0.0721750) / 1.00000
+    let Z = (rn*0.0193339 + gn*0.1191920 + bn*0.9503041) / 1.08883
+    const f = t => t > 0.008856 ? Math.cbrt(t) : 7.787*t + 16/116
+    const fx = f(X), fy = f(Y), fz = f(Z)
+    return [116*fy - 16, 500*(fx-fy), 200*(fy-fz)]
+  }
+
+  function labToRgb(L, a, b) {
+    const fy = (L+16)/116, fx = a/500+fy, fz = fy-b/200
+    const fi = t => t*t*t > 0.008856 ? t*t*t : (t - 16/116)/7.787
+    let X = 0.95047*fi(fx), Y = 1.00000*fi(fy), Z = 1.08883*fi(fz)
+    let rn =  X*3.2404542 - Y*1.5371385 - Z*0.4985314
+    let gn = -X*0.9692660 + Y*1.8760108 + Z*0.0415560
+    let bn =  X*0.0556434 - Y*0.2040259 + Z*1.0572252
+    const gc = v => v <= 0.0031308 ? 12.92*v : 1.055*Math.pow(v, 1/2.4) - 0.055
+    return [
+      Math.min(255, Math.max(0, Math.round(gc(rn)*255))),
+      Math.min(255, Math.max(0, Math.round(gc(gn)*255))),
+      Math.min(255, Math.max(0, Math.round(gc(bn)*255)))
+    ]
+  }
+
+  function getLabStats(imgData) {
+    const d = imgData.data
+    const n = d.length / 4
+    let sumL=0, sumA=0, sumB=0
+    const labs = new Float32Array(n * 3)
+    for (let i=0; i<n; i++) {
+      const [L,a,b] = rgbToLab(d[i*4], d[i*4+1], d[i*4+2])
+      labs[i*3]=L; labs[i*3+1]=a; labs[i*3+2]=b
+      sumL+=L; sumA+=a; sumB+=b
+    }
+    const mL=sumL/n, mA=sumA/n, mB=sumB/n
+    let varL=0, varA=0, varB=0
+    for (let i=0; i<n; i++) {
+      varL += (labs[i*3]-mL)**2
+      varA += (labs[i*3+1]-mA)**2
+      varB += (labs[i*3+2]-mB)**2
+    }
+    return { mL, mA, mB, sL:Math.sqrt(varL/n), sA:Math.sqrt(varA/n), sB:Math.sqrt(varB/n), labs }
+  }
+
+  function applyColorTransfer(srcData, src, tgt, intensity) {
+    const result = new ImageData(new Uint8ClampedArray(srcData.data), srcData.width, srcData.height)
+    const n = srcData.data.length / 4
+    for (let i=0; i<n; i++) {
+      let L = src.labs[i*3], a = src.labs[i*3+1], b = src.labs[i*3+2]
+      // Reinhard color transfer
+      const Ln = (L - src.mL) * (tgt.sL / (src.sL||1)) + tgt.mL
+      const an = (a - src.mA) * (tgt.sA / (src.sA||1)) + tgt.mA
+      const bn = (b - src.mB) * (tgt.sB / (src.sB||1)) + tgt.mB
+      // Blend with original based on intensity
+      const Lf = src.mL + (Ln - src.mL) * intensity + (L - src.mL) * (1 - intensity)
+      const af = src.mA + (an - src.mA) * intensity + (a - src.mA) * (1 - intensity)
+      const bf = src.mB + (bn - src.mB) * intensity + (b - src.mB) * (1 - intensity)
+
+      const [r,g,bv] = labToRgb(Lf, af, bf)
+      result.data[i*4]   = r
+      result.data[i*4+1] = g
+      result.data[i*4+2] = bv
+      result.data[i*4+3] = srcData.data[i*4+3]
+    }
+    return result
+  }
+
+  function extractPalette(imgData, count) {
+    const d = imgData.data
+    const step = Math.max(1, Math.floor(d.length / 4 / 500)) // sample ~500 pixels
+    const colors = []
+    for (let i=0; i<d.length/4; i+=step) {
+      colors.push([d[i*4], d[i*4+1], d[i*4+2]])
+    }
+    // Simple: divide into `count` buckets by sampling
+    const bucket = Math.floor(colors.length / count)
+    return Array.from({length: count}, (_,k) => {
+      const slice = colors.slice(k*bucket, (k+1)*bucket)
+      const avg = slice.reduce((a,c) => [a[0]+c[0],a[1]+c[1],a[2]+c[2]], [0,0,0])
+      return avg.map(v => Math.round(v/slice.length))
+    })
+  }
+
+  function renderSwatches(colors) {
+    const el = document.getElementById('swatches')
+    el.innerHTML = colors.map(([r,g,b]) =>
+      `<div class="swatch" style="background:rgb(${r},${g},${b})" title="rgb(${r},${g},${b})"></div>`
+    ).join('')
   }
 
   // ── Step 2: JSON → Imagen ─────────────────────────────────────
   async function generateImage() {
     if (!currentJSON) return
     clearError('p3-error')
-
     const btnMain = document.getElementById('btn-gen-img')
     const btnRegen = document.getElementById('btn-regen')
-    const sp2 = document.getElementById('sp2')
-    const sp3 = document.getElementById('sp3')
-    const txt2 = document.getElementById('btn-gen-txt')
-    const txt3 = document.getElementById('btn-regen-txt')
-
+    const sp2 = document.getElementById('sp2'), sp3 = document.getElementById('sp3')
+    const txt2 = document.getElementById('btn-gen-txt'), txt3 = document.getElementById('btn-regen-txt')
     btnMain.disabled = true; btnRegen.disabled = true
     sp2.style.display = 'block'; sp3.style.display = 'block'
     txt2.textContent = 'Generating…'; txt3.textContent = 'Generating…'
     setGenStatus('loading', 'Gemini is painting…')
-
     try {
       const res = await fetch(`${API}/api/generate-image`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: currentJSON })
       })
-
       if (!res.ok) {
         let msg = `Gemini error ${res.status}`
         try { msg = (await res.json()).error || msg } catch {}
         throw new Error(msg)
       }
-
       const data = await res.json()
       currentImageB64 = data.imageBase64
-      const src = `data:${data.mimeType};base64,${data.imageBase64}`
-      document.getElementById('gen-img').src = src
+      document.getElementById('gen-img').src = `data:${data.mimeType};base64,${data.imageBase64}`
       document.getElementById('prompt-text').textContent = data.prompt
       document.getElementById('prompt-preview').style.display = 'block'
       document.getElementById('gen-empty').style.display = 'none'
       document.getElementById('gen-image-wrap').style.display = 'flex'
       document.getElementById('btn-gen-img').style.display = 'none'
+      document.getElementById('btn-regen').style.display = 'flex'
       setGenStatus('ready', 'Image generated ✓')
       setSteps(3)
-
     } catch (err) {
       showError('p3-error', err.message)
       setGenStatus('', 'Error')
@@ -686,7 +983,6 @@
   function renderJSON(obj) {
     document.getElementById('json-tree').innerHTML = syntaxHighlight(JSON.stringify(obj, null, 2))
   }
-
   function syntaxHighlight(json) {
     json = json.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
@@ -697,7 +993,6 @@
       return `<span class="${cls}">${m}</span>`
     })
   }
-
   function copyJSON() {
     if (!currentJSON) return
     navigator.clipboard.writeText(JSON.stringify(currentJSON, null, 2))
@@ -705,27 +1000,24 @@
     btn.textContent = '✓ Copied!'
     setTimeout(() => btn.innerHTML = '📋 Copy', 2000)
   }
-
   function downloadJSON() {
     if (!currentJSON) return
     const name = (currentFile1?.name || 'prompt').replace(/\.[^.]+$/, '')
     const blob = new Blob([JSON.stringify(currentJSON, null, 2)], { type: 'application/json' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob); a.download = `nb-${name}.json`; a.click()
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
+    a.download = `nb-${name}.json`; a.click()
   }
-
   function downloadImage() {
     if (!currentImageB64) return
     const a = document.createElement('a')
-    a.href = `data:image/png;base64,${currentImageB64}`
-    a.download = `gemini-${Date.now()}.png`; a.click()
+    const isTransfer = mode === 'transfer'
+    a.href = isTransfer ? `data:image/png;base64,${currentImageB64}` : `data:image/png;base64,${currentImageB64}`
+    a.download = `${isTransfer ? 'transfer' : 'gemini'}-${Date.now()}.png`; a.click()
   }
-
   function compressImage(file) {
     return new Promise((resolve, reject) => {
       const MAX_BYTES = 3 * 1024 * 1024
-      const img = new Image()
-      const url = URL.createObjectURL(file)
+      const img = new Image(); const url = URL.createObjectURL(file)
       img.onload = () => {
         URL.revokeObjectURL(url)
         let { width, height } = img
@@ -737,36 +1029,24 @@
         const canvas = document.createElement('canvas')
         canvas.width = width; canvas.height = height
         canvas.getContext('2d').drawImage(img, 0, 0, width, height)
-        let q = 0.85
-        let dataUrl = canvas.toDataURL('image/jpeg', q)
-        while (dataUrl.length * 0.75 > MAX_BYTES && q > 0.3) {
-          q -= 0.1; dataUrl = canvas.toDataURL('image/jpeg', q)
-        }
+        let q = 0.85, dataUrl = canvas.toDataURL('image/jpeg', q)
+        while (dataUrl.length * 0.75 > MAX_BYTES && q > 0.3) { q -= 0.1; dataUrl = canvas.toDataURL('image/jpeg', q) }
         resolve(dataUrl.split(',')[1])
       }
       img.onerror = reject; img.src = url
     })
   }
-
-  function showError(id, msg) {
-    const el = document.getElementById(id)
-    el.textContent = `Error: ${msg}`; el.style.display = 'block'
-  }
-  function clearError(id) { document.getElementById(id).style.display = 'none' }
-
+  function showError(id, msg) { const el=document.getElementById(id); el.textContent=`Error: ${msg}`; el.style.display='block' }
+  function clearError(id) { document.getElementById(id).style.display='none' }
   function setGenStatus(type, text) {
-    const dot = document.getElementById('gen-dot')
-    dot.className = 'status-dot' + (type ? ' '+type : '')
+    document.getElementById('gen-dot').className = 'status-dot' + (type ? ' '+type : '')
     document.getElementById('gen-status').textContent = text
   }
-
   function setSteps(active) {
-    for (let i = 1; i <= 3; i++) {
-      const el = document.getElementById(`step${i}`)
-      el.className = i < active ? 'step-num done' : i === active ? 'step-num active' : 'step-num'
+    for (let i=1;i<=3;i++) {
+      document.getElementById(`step${i}`).className = i<active?'step-num done':i===active?'step-num active':'step-num'
     }
   }
-
   function resetJSON() {
     currentJSON = null
     document.getElementById('json-empty').style.display = 'flex'
@@ -775,22 +1055,23 @@
     document.getElementById('btn-dl').style.display = 'none'
     document.getElementById('btn-gen-img').disabled = true
     clearError('p2-error')
+    // palette section
+    document.getElementById('palette-empty').style.display = 'flex'
+    document.getElementById('palette-result').style.display = 'none'
   }
-
   function resetImage() {
     currentImageB64 = null
     document.getElementById('gen-empty').style.display = 'flex'
     document.getElementById('gen-image-wrap').style.display = 'none'
-    document.getElementById('btn-gen-img').style.display = 'flex'
+    document.getElementById('btn-gen-img').style.display = mode === 'transfer' ? 'none' : 'flex'
+    document.getElementById('btn-regen').style.display = 'none'
     document.getElementById('prompt-preview').style.display = 'none'
     clearError('p3-error')
-    setGenStatus('', 'Waiting for JSON')
+    setGenStatus('', 'Waiting')
     setSteps(1)
   }
-
   function formatSize(b) {
-    if (b < 1024) return b+' B'
-    if (b < 1048576) return (b/1024).toFixed(1)+' KB'
+    if (b<1024) return b+' B'; if (b<1048576) return (b/1024).toFixed(1)+' KB'
     return (b/1048576).toFixed(1)+' MB'
   }
 </script>
