@@ -20,6 +20,10 @@
       "dest": "/api/branding.js"
     },
     {
+      "src": "/api/generate-image",
+      "dest": "/api/generate-image.js"
+    },
+    {
       "src": "/",
       "dest": "/nano-banana.html"
     },

@@ -6,7 +6,6 @@
   <title>Nano Banana Pro — JSON Prompt Generator</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
       --bg: #0d0d0d;
       --surface: #161616;
@@ -14,13 +13,13 @@
       --accent: #f5c518;
       --accent2: #f59e0b;
       --text: #f0f0f0;
-      --muted: #666;
+      --muted: #555;
       --success: #10b981;
       --error: #ef4444;
+      --gemini: #4285f4;
     }
-
     body {
-      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-family: 'SF Mono', 'Fira Code', monospace;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -30,712 +29,641 @@
 
     /* ── Header ── */
     header {
-      padding: 24px 40px;
+      padding: 18px 32px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
+      flex-shrink: 0;
     }
-    .logo {
-      font-size: 1.4rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
+    .logo { font-size: 1.3rem; font-weight: 700; }
     .logo span { color: var(--accent); }
     .badge {
-      background: var(--accent);
-      color: #000;
-      font-size: 0.6rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      padding: 3px 8px;
-      border-radius: 4px;
-      text-transform: uppercase;
+      background: var(--accent); color: #000;
+      font-size: 0.58rem; font-weight: 700;
+      letter-spacing: 0.1em; padding: 3px 8px;
+      border-radius: 4px; text-transform: uppercase;
     }
+    .gemini-badge {
+      background: var(--gemini); color: #fff;
+      font-size: 0.58rem; font-weight: 700;
+      letter-spacing: 0.1em; padding: 3px 8px;
+      border-radius: 4px; text-transform: uppercase;
+    }
+    .api-key-input {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .api-key-input label {
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .api-key-input input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.72rem;
+      padding: 6px 12px;
+      border-radius: 6px;
+      width: 260px;
+      transition: border 0.2s;
+    }
+    .api-key-input input:focus { outline: none; border-color: var(--gemini); }
+    .api-key-input input::placeholder { color: var(--muted); }
 
-    /* ── Main layout ── */
+    /* ── Main: 3 columns ── */
     main {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0;
+      grid-template-columns: 320px 1fr 1fr;
       flex: 1;
-      height: calc(100vh - 73px);
+      height: calc(100vh - 65px);
+      overflow: hidden;
     }
 
-    /* ── Left panel ── */
-    .left {
+    /* ── Shared panel ── */
+    .panel {
       border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      padding: 32px;
-      gap: 24px;
-      overflow-y: auto;
+      overflow: hidden;
     }
-
+    .panel:last-child { border-right: none; }
+    .panel-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
     .panel-title {
-      font-size: 0.7rem;
+      font-size: 0.62rem;
       letter-spacing: 0.15em;
       text-transform: uppercase;
       color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .step-num {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--border);
+      color: var(--muted);
+      font-size: 0.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+    .step-num.active { background: var(--accent); color: #000; }
+    .step-num.done { background: var(--success); color: #fff; }
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
-    /* ── Drop zone ── */
+    /* ── Dropzone ── */
     .dropzone {
       border: 2px dashed var(--border);
-      border-radius: 16px;
-      padding: 48px 32px;
+      border-radius: 12px;
+      padding: 32px 20px;
       text-align: center;
       cursor: pointer;
-      transition: all 0.25s;
+      transition: all 0.2s;
       position: relative;
       background: var(--surface);
+      flex-shrink: 0;
     }
     .dropzone:hover, .dropzone.drag-over {
       border-color: var(--accent);
-      background: rgba(245,197,24,0.04);
+      background: rgba(245,197,24,0.03);
     }
     .dropzone input[type="file"] {
       position: absolute; inset: 0;
       opacity: 0; cursor: pointer;
       width: 100%; height: 100%;
     }
-    .dropzone .icon {
-      font-size: 3rem;
-      margin-bottom: 16px;
-    }
-    .dropzone h3 {
-      font-size: 0.95rem;
-      color: var(--text);
-      margin-bottom: 8px;
-      font-family: -apple-system, sans-serif;
-    }
-    .dropzone p {
-      font-size: 0.75rem;
-      color: var(--muted);
-      font-family: -apple-system, sans-serif;
-    }
-    .dropzone .formats {
-      margin-top: 16px;
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    .dropzone .fmt {
-      background: var(--border);
-      color: var(--muted);
-      font-size: 0.65rem;
-      padding: 3px 10px;
-      border-radius: 4px;
-      letter-spacing: 0.08em;
-    }
+    .dropzone .dz-icon { font-size: 2rem; margin-bottom: 10px; }
+    .dropzone h3 { font-size: 0.82rem; color: var(--text); margin-bottom: 6px; font-family: -apple-system, sans-serif; }
+    .dropzone p { font-size: 0.7rem; color: var(--muted); font-family: -apple-system, sans-serif; }
+    .fmts { display: flex; gap: 6px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+    .fmt { background: var(--border); color: var(--muted); font-size: 0.6rem; padding: 2px 8px; border-radius: 3px; }
 
-    /* ── Preview ── */
-    #preview-area { display: none; }
-    .img-preview {
-      border-radius: 12px;
-      overflow: hidden;
-      position: relative;
+    /* ── Image preview ── */
+    #preview-area { display: none; flex-direction: column; gap: 10px; }
+    .ref-img { width: 100%; border-radius: 10px; display: block; max-height: 220px; object-fit: cover; }
+    .img-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 12px;
     }
-    .img-preview img {
-      width: 100%;
-      max-height: 400px;
-      object-fit: cover;
-      display: block;
+    .img-meta .iname { font-size: 0.68rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; }
+    .img-meta .isize { font-size: 0.65rem; color: var(--muted); }
+
+    /* ── Buttons ── */
+    .btn {
+      border: none; border-radius: 8px; cursor: pointer;
+      font-family: inherit; font-weight: 600; font-size: 0.8rem;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 20px; transition: all 0.2s; letter-spacing: 0.02em;
     }
-    .img-preview .img-info {
-      padding: 12px 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-top: none;
-      border-radius: 0 0 12px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+    .btn-yellow { background: var(--accent); color: #000; }
+    .btn-yellow:hover:not(:disabled) { background: var(--accent2); transform: translateY(-1px); }
+    .btn-blue { background: var(--gemini); color: #fff; }
+    .btn-blue:hover:not(:disabled) { background: #3b78e7; transform: translateY(-1px); }
+    .btn-ghost {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); font-weight: 400;
     }
-    .img-preview .img-name {
-      font-size: 0.75rem;
-      color: var(--text);
-      truncate: true;
-      max-width: 70%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .img-preview .img-size {
-      font-size: 0.7rem;
-      color: var(--muted);
-    }
-    .btn-remove {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 0.72rem;
-      padding: 5px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.2s;
-    }
+    .btn-ghost:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn-sm { font-size: 0.68rem; padding: 6px 12px; border-radius: 6px; }
+    .btn-remove { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 0.65rem; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-family: inherit; }
     .btn-remove:hover { border-color: var(--error); color: var(--error); }
 
-    /* ── Generate button ── */
-    .btn-generate {
-      background: var(--accent);
-      color: #000;
-      border: none;
-      padding: 14px 28px;
-      border-radius: 10px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      letter-spacing: 0.03em;
-    }
-    .btn-generate:hover { background: var(--accent2); transform: translateY(-1px); }
-    .btn-generate:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      transform: none;
-    }
     .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid rgba(0,0,0,0.2);
+      width: 14px; height: 14px;
+      border: 2px solid rgba(0,0,0,0.25);
       border-top-color: #000;
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
       display: none;
     }
+    .spinner.white { border-color: rgba(255,255,255,0.2); border-top-color: #fff; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── History ── */
-    .history-section { display: none; }
-    .history-title {
-      font-size: 0.65rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-    .history-list { display: flex; flex-direction: column; gap: 8px; }
-    .history-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .history-item:hover { border-color: var(--accent); }
-    .history-item img {
-      width: 36px; height: 36px;
-      object-fit: cover;
-      border-radius: 4px;
-    }
-    .history-item .hname {
-      font-size: 0.72rem;
-      color: var(--text);
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-family: -apple-system, sans-serif;
-    }
-    .history-item .htime {
-      font-size: 0.65rem;
-      color: var(--muted);
-    }
-
-    /* ── Right panel ── */
-    .right {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .output-header {
-      padding: 20px 32px 16px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .output-header .left-h {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    /* ── Status dot ── */
     .status-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--border);
+      width: 7px; height: 7px;
+      border-radius: 50%; background: var(--border);
+      flex-shrink: 0;
     }
     .status-dot.ready { background: var(--success); }
     .status-dot.loading { background: var(--accent); animation: pulse 1s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-    .btn-copy, .btn-dl {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-size: 0.72rem;
-      padding: 7px 14px;
-      border-radius: 7px;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .btn-copy:hover, .btn-dl:hover { border-color: var(--accent); color: var(--accent); }
-    .btn-copy.copied { border-color: var(--success); color: var(--success); }
-    .output-actions { display: flex; gap: 8px; }
-
-    /* ── Code output ── */
-    .output-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px 32px;
-      position: relative;
-    }
-
-    /* Empty state */
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      gap: 16px;
-      color: var(--muted);
-    }
-    .empty-state .big-icon { font-size: 4rem; opacity: 0.3; }
-    .empty-state p {
-      font-size: 0.8rem;
-      font-family: -apple-system, sans-serif;
-      text-align: center;
-      max-width: 280px;
-      line-height: 1.6;
-    }
-
-    /* JSON display */
-    #json-output {
-      display: none;
-    }
+    /* ── JSON output ── */
     .json-tree {
-      font-size: 0.78rem;
-      line-height: 1.8;
-      white-space: pre;
-      overflow-x: auto;
+      font-size: 0.72rem; line-height: 1.8;
+      white-space: pre; overflow-x: auto;
     }
     .json-key { color: #a78bfa; }
     .json-str { color: #6ee7b7; }
     .json-num { color: #fbbf24; }
     .json-bool { color: #f472b6; }
     .json-null { color: var(--muted); }
-    .json-bracket { color: #94a3b8; }
-    .json-comma { color: #94a3b8; }
 
-    /* Error state */
-    #error-box {
+    /* ── Generated image ── */
+    #gen-image-wrap { display: none; flex-direction: column; gap: 12px; }
+    .gen-img { width: 100%; border-radius: 12px; display: block; box-shadow: 0 8px 40px rgba(0,0,0,0.5); }
+    .gen-actions { display: flex; gap: 8px; }
+
+    /* ── Empty states ── */
+    .empty {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 12px; color: var(--muted); text-align: center;
+    }
+    .empty .eicon { font-size: 2.5rem; opacity: 0.25; }
+    .empty p { font-size: 0.72rem; font-family: -apple-system, sans-serif; max-width: 220px; line-height: 1.6; }
+
+    /* ── Error box ── */
+    .err-box {
       display: none;
       background: rgba(239,68,68,0.08);
-      border: 1px solid rgba(239,68,68,0.3);
-      border-radius: 10px;
-      padding: 16px 20px;
-      font-size: 0.78rem;
-      color: var(--error);
-      font-family: -apple-system, sans-serif;
-      line-height: 1.6;
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 8px; padding: 12px 16px;
+      font-size: 0.72rem; color: var(--error);
+      font-family: -apple-system, sans-serif; line-height: 1.6;
     }
+
+    /* ── Prompt preview ── */
+    .prompt-preview {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.65rem;
+      color: var(--muted);
+      line-height: 1.6;
+      font-family: -apple-system, sans-serif;
+    }
+    .prompt-preview strong { color: var(--text); display: block; margin-bottom: 4px; font-family: inherit; }
 
     /* ── Scrollbar ── */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #444; }
 
-    /* ── API key warning ── */
-    #api-warn {
-      display: none;
-      background: rgba(245,197,24,0.08);
-      border: 1px solid rgba(245,197,24,0.3);
-      border-radius: 10px;
-      padding: 12px 16px;
-      font-size: 0.75rem;
-      color: var(--accent);
-      font-family: -apple-system, sans-serif;
-      line-height: 1.6;
-    }
-
-    @media (max-width: 900px) {
+    /* ── Responsive ── */
+    @media (max-width: 1000px) {
       main { grid-template-columns: 1fr; height: auto; }
-      .left { border-right: none; border-bottom: 1px solid var(--border); }
-      .right { height: 60vh; }
+      .panel { border-right: none; border-bottom: 1px solid var(--border); min-height: 400px; }
+      .api-key-input input { width: 180px; }
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="logo">Nano <span>Banana</span> Pro</div>
-    <div class="badge">JSON Generator</div>
-  </header>
+<header>
+  <div class="logo">Nano <span>Banana</span> Pro</div>
+  <div class="badge">JSON</div>
+  <div class="gemini-badge">+ Imagen</div>
+  <div class="api-key-input">
+    <label>Gemini API Key</label>
+    <input type="password" id="gemini-key" placeholder="AIza..." autocomplete="off" />
+  </div>
+</header>
 
-  <main>
-    <!-- LEFT: Upload -->
-    <div class="left">
-      <div class="panel-title">Reference Image</div>
+<main>
 
-      <!-- Dropzone -->
+  <!-- PANEL 1: Upload -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="step-num active" id="step1">1</div>
+        Reference Image
+      </div>
+    </div>
+    <div class="panel-body">
+
       <div class="dropzone" id="dropzone">
         <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp,image/gif" />
-        <div class="icon">🍌</div>
-        <h3>Drop your reference image here</h3>
-        <p>or click to browse files</p>
-        <div class="formats">
-          <span class="fmt">JPG</span>
-          <span class="fmt">PNG</span>
-          <span class="fmt">WEBP</span>
-          <span class="fmt">GIF</span>
+        <div class="dz-icon">🍌</div>
+        <h3>Drop image here</h3>
+        <p>or click to browse · paste with ⌘V</p>
+        <div class="fmts">
+          <span class="fmt">JPG</span><span class="fmt">PNG</span>
+          <span class="fmt">WEBP</span><span class="fmt">GIF</span>
         </div>
       </div>
 
-      <!-- Preview -->
       <div id="preview-area">
-        <div class="img-preview">
-          <img id="preview-img" src="" alt="preview" />
-          <div class="img-info">
-            <span class="img-name" id="img-name">filename.jpg</span>
-            <span class="img-size" id="img-size">0 KB</span>
-            <button class="btn-remove" onclick="removeImage()">✕ Remove</button>
-          </div>
+        <img class="ref-img" id="preview-img" src="" alt="preview" />
+        <div class="img-meta">
+          <span class="iname" id="img-name">—</span>
+          <span class="isize" id="img-size">—</span>
+          <button class="btn-remove" onclick="removeImage()">✕</button>
         </div>
       </div>
 
-      <!-- API Key warning -->
-      <div id="api-warn">
-        ⚠️ Make sure the API server is running:<br>
-        <code>node server/index.js</code><br><br>
-        And that <code>ANTHROPIC_API_KEY</code> is set in your environment.
-      </div>
+      <div id="p1-error" class="err-box"></div>
 
-      <!-- Generate -->
-      <button class="btn-generate" id="btn-generate" onclick="generatePrompt()" disabled>
-        <div class="spinner" id="spinner"></div>
-        <span id="btn-text">⚡ Generate JSON Prompt</span>
+      <button class="btn btn-yellow" id="btn-analyze" onclick="generatePrompt()" disabled>
+        <div class="spinner" id="sp1"></div>
+        <span id="btn-analyze-txt">⚡ Analyze & Generate JSON</span>
       </button>
 
-      <!-- History -->
-      <div class="history-section" id="history-section">
-        <div class="history-title">Recent Generations</div>
-        <div class="history-list" id="history-list"></div>
+    </div>
+  </div>
+
+  <!-- PANEL 2: JSON -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="step-num" id="step2">2</div>
+        JSON Prompt
+      </div>
+      <div style="display:flex;gap:6px" id="json-actions">
+        <button class="btn btn-ghost btn-sm" id="btn-copy" onclick="copyJSON()" style="display:none">📋 Copy</button>
+        <button class="btn btn-ghost btn-sm" id="btn-dl" onclick="downloadJSON()" style="display:none">⬇ Save</button>
       </div>
     </div>
+    <div class="panel-body" id="json-panel-body">
 
-    <!-- RIGHT: Output -->
-    <div class="right">
-      <div class="output-header">
-        <div class="left-h">
-          <div class="status-dot" id="status-dot"></div>
-          <span class="panel-title" id="status-text">Waiting for image</span>
-        </div>
-        <div class="output-actions">
-          <button class="btn-copy" id="btn-copy" onclick="copyJSON()" style="display:none">
-            📋 Copy JSON
-          </button>
-          <button class="btn-dl" id="btn-dl" onclick="downloadJSON()" style="display:none">
-            ⬇ Download
-          </button>
-        </div>
+      <div class="empty" id="json-empty">
+        <div class="eicon">{ }</div>
+        <p>Upload a reference image and analyze it to get the JSON prompt here.</p>
       </div>
 
-      <div class="output-body">
-        <!-- Empty -->
-        <div class="empty-state" id="empty-state">
-          <div class="big-icon">🍌</div>
-          <p>Upload a reference image and click <strong>Generate JSON Prompt</strong> to get a ready-to-use prompt for Nano Banana Pro.</p>
-        </div>
+      <div id="json-output" style="display:none">
+        <pre class="json-tree" id="json-tree"></pre>
+      </div>
 
-        <!-- Error -->
-        <div id="error-box"></div>
+      <div id="p2-error" class="err-box"></div>
 
-        <!-- JSON output -->
-        <div id="json-output">
-          <pre class="json-tree" id="json-tree"></pre>
-        </div>
+    </div>
+  </div>
+
+  <!-- PANEL 3: Generated Image -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="step-num" id="step3">3</div>
+        Generated Image
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <div class="status-dot" id="gen-dot"></div>
+        <span style="font-size:0.62rem;color:var(--muted)" id="gen-status">Waiting for JSON</span>
       </div>
     </div>
-  </main>
+    <div class="panel-body">
 
-  <script>
-    const API = window.location.hostname === 'localhost' ? 'http://localhost:3001' : ''
-    let currentFile = null
-    let currentJSON = null
-    const history = []
+      <div class="empty" id="gen-empty">
+        <div class="eicon">🎨</div>
+        <p>Once you have the JSON prompt, click <strong>Generate Image</strong> to create with Gemini.</p>
+      </div>
 
-    // ── Dropzone ────────────────────────────────────────────
-    const dropzone = document.getElementById('dropzone')
-    const fileInput = document.getElementById('file-input')
+      <div id="gen-image-wrap">
+        <img class="gen-img" id="gen-img" src="" alt="generated" />
+        <div class="prompt-preview" id="prompt-preview">
+          <strong>Prompt sent to Gemini:</strong>
+          <span id="prompt-text"></span>
+        </div>
+        <div class="gen-actions">
+          <button class="btn btn-blue" id="btn-regen" onclick="generateImage()" style="flex:1">
+            <div class="spinner white" id="sp3"></div>
+            <span id="btn-regen-txt">🔄 Regenerate</span>
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="downloadImage()">⬇ Save</button>
+        </div>
+      </div>
 
-    dropzone.addEventListener('dragover', e => {
-      e.preventDefault()
-      dropzone.classList.add('drag-over')
-    })
-    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'))
-    dropzone.addEventListener('drop', e => {
-      e.preventDefault()
-      dropzone.classList.remove('drag-over')
-      const file = e.dataTransfer.files[0]
-      if (file) loadFile(file)
-    })
-    fileInput.addEventListener('change', e => {
-      if (e.target.files[0]) loadFile(e.target.files[0])
-    })
+      <button class="btn btn-blue" id="btn-gen-img" onclick="generateImage()" disabled style="flex-shrink:0">
+        <div class="spinner white" id="sp2"></div>
+        <span id="btn-gen-txt">🎨 Generate Image</span>
+      </button>
 
-    function loadFile(file) {
-      if (!file.type.startsWith('image/')) return alert('Please upload an image file.')
-      currentFile = file
-      const reader = new FileReader()
-      reader.onload = e => {
-        document.getElementById('preview-img').src = e.target.result
-        document.getElementById('img-name').textContent = file.name
-        document.getElementById('img-size').textContent = formatSize(file.size)
-        document.getElementById('dropzone').style.display = 'none'
-        document.getElementById('preview-area').style.display = 'block'
-        document.getElementById('btn-generate').disabled = false
-        setStatus('ready', 'Ready to generate')
-      }
-      reader.readAsDataURL(file)
+      <div id="p3-error" class="err-box"></div>
+
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const API = window.location.hostname === 'localhost' ? 'http://localhost:3001' : ''
+  let currentFile = null
+  let currentJSON = null
+  let currentImageB64 = null
+
+  // ── File input ────────────────────────────────────────────
+  const dropzone = document.getElementById('dropzone')
+  const fileInput = document.getElementById('file-input')
+
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over') })
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'))
+  dropzone.addEventListener('drop', e => { e.preventDefault(); dropzone.classList.remove('drag-over'); if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]) })
+  fileInput.addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]) })
+  document.addEventListener('paste', e => {
+    for (const item of (e.clipboardData?.items || [])) {
+      if (item.type.startsWith('image/')) { loadFile(item.getAsFile()); break }
     }
+  })
 
-    function removeImage() {
-      currentFile = null
-      currentJSON = null
-      fileInput.value = ''
-      document.getElementById('dropzone').style.display = 'block'
-      document.getElementById('preview-area').style.display = 'none'
-      document.getElementById('btn-generate').disabled = true
-      document.getElementById('btn-copy').style.display = 'none'
-      document.getElementById('btn-dl').style.display = 'none'
-      document.getElementById('json-output').style.display = 'none'
-      document.getElementById('empty-state').style.display = 'flex'
-      document.getElementById('error-box').style.display = 'none'
-      setStatus('', 'Waiting for image')
+  function loadFile(file) {
+    if (!file.type.startsWith('image/')) return
+    currentFile = file
+    const reader = new FileReader()
+    reader.onload = e => {
+      document.getElementById('preview-img').src = e.target.result
+      document.getElementById('img-name').textContent = file.name
+      document.getElementById('img-size').textContent = formatSize(file.size)
+      document.getElementById('dropzone').style.display = 'none'
+      document.getElementById('preview-area').style.display = 'flex'
+      document.getElementById('btn-analyze').disabled = false
+      document.getElementById('step1').className = 'step-num active'
+      clearError('p1-error')
     }
+    reader.readAsDataURL(file)
+  }
 
-    // ── Generate ─────────────────────────────────────────────
-    async function generatePrompt() {
-      if (!currentFile) return
+  function removeImage() {
+    currentFile = null; currentJSON = null; currentImageB64 = null
+    fileInput.value = ''
+    document.getElementById('dropzone').style.display = 'block'
+    document.getElementById('preview-area').style.display = 'none'
+    document.getElementById('btn-analyze').disabled = true
+    resetJSON(); resetImage()
+    setSteps(1)
+  }
 
-      const btn = document.getElementById('btn-generate')
-      const spinner = document.getElementById('spinner')
-      const btnText = document.getElementById('btn-text')
-      const errorBox = document.getElementById('error-box')
+  // ── Step 1: Analyze → JSON ─────────────────────────────────
+  async function generatePrompt() {
+    if (!currentFile) return
+    const btn = document.getElementById('btn-analyze')
+    const sp = document.getElementById('sp1')
+    const txt = document.getElementById('btn-analyze-txt')
+    clearError('p1-error'); clearError('p2-error')
 
-      btn.disabled = true
-      spinner.style.display = 'block'
-      btnText.textContent = 'Analyzing image…'
-      errorBox.style.display = 'none'
-      document.getElementById('json-output').style.display = 'none'
-      document.getElementById('empty-state').style.display = 'none'
-      setStatus('loading', 'Claude is analyzing…')
+    btn.disabled = true; sp.style.display = 'block'; txt.textContent = 'Compressing…'
 
-      try {
-        // Compress + convert to base64
-        btnText.textContent = 'Compressing image…'
-        const b64 = await fileToBase64(currentFile)
-        const mediaType = 'image/jpeg'
+    try {
+      const b64 = await compressImage(currentFile)
+      txt.textContent = 'Analyzing…'
 
-        btnText.textContent = 'Analyzing image…'
-        const res = await fetch(`${API}/api/json-prompt`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageBase64: b64, mediaType })
-        })
-
-        if (!res.ok) {
-          let errMsg = `Server error ${res.status}`
-          try { const err = await res.json(); errMsg = err.error || errMsg } catch {}
-          throw new Error(errMsg)
-        }
-
-        const data = await res.json()
-        currentJSON = data.prompt
-
-        // Render
-        renderJSON(currentJSON)
-        document.getElementById('json-output').style.display = 'block'
-        document.getElementById('btn-copy').style.display = 'flex'
-        document.getElementById('btn-dl').style.display = 'flex'
-        setStatus('ready', 'Prompt generated ✓')
-
-        // Add to history
-        addToHistory(currentFile.name, document.getElementById('preview-img').src, currentJSON)
-
-      } catch (err) {
-        const isLocal = window.location.hostname === 'localhost'
-        errorBox.textContent = `Error: ${err.message}` +
-          (isLocal ? '\n\nMake sure the API server is running on port 3001 with your ANTHROPIC_API_KEY set.' : '')
-        errorBox.style.display = 'block'
-        if (isLocal) document.getElementById('api-warn').style.display = 'block'
-        setStatus('', 'Error — see details')
-      } finally {
-        btn.disabled = false
-        spinner.style.display = 'none'
-        btnText.textContent = '⚡ Generate JSON Prompt'
-      }
-    }
-
-    // ── JSON Renderer ─────────────────────────────────────────
-    function renderJSON(obj) {
-      document.getElementById('json-tree').innerHTML = syntaxHighlight(JSON.stringify(obj, null, 2))
-    }
-
-    function syntaxHighlight(json) {
-      json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
-        let cls = 'json-num'
-        if (/^"/.test(match)) {
-          cls = /:$/.test(match) ? 'json-key' : 'json-str'
-        } else if (/true|false/.test(match)) {
-          cls = 'json-bool'
-        } else if (/null/.test(match)) {
-          cls = 'json-null'
-        }
-        return `<span class="${cls}">${match}</span>`
+      const res = await fetch(`${API}/api/json-prompt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: b64, mediaType: 'image/jpeg' })
       })
-    }
 
-    // ── Copy / Download ───────────────────────────────────────
-    function copyJSON() {
-      if (!currentJSON) return
-      navigator.clipboard.writeText(JSON.stringify(currentJSON, null, 2))
-      const btn = document.getElementById('btn-copy')
-      btn.textContent = '✓ Copied!'
-      btn.classList.add('copied')
-      setTimeout(() => {
-        btn.innerHTML = '📋 Copy JSON'
-        btn.classList.remove('copied')
-      }, 2000)
-    }
+      if (!res.ok) {
+        let msg = `Server error ${res.status}`
+        try { msg = (await res.json()).error || msg } catch {}
+        throw new Error(msg)
+      }
 
-    function downloadJSON() {
-      if (!currentJSON) return
-      const name = (currentFile?.name || 'prompt').replace(/\.[^.]+$/, '')
-      const blob = new Blob([JSON.stringify(currentJSON, null, 2)], { type: 'application/json' })
-      const a = document.createElement('a')
-      a.href = URL.createObjectURL(blob)
-      a.download = `nb-prompt-${name}.json`
-      a.click()
-    }
-
-    // ── History ───────────────────────────────────────────────
-    function addToHistory(name, thumb, json) {
-      history.unshift({ name, thumb, json, time: new Date() })
-      if (history.length > 6) history.pop()
-      renderHistory()
-    }
-
-    function renderHistory() {
-      const section = document.getElementById('history-section')
-      const list = document.getElementById('history-list')
-      if (history.length === 0) { section.style.display = 'none'; return }
-      section.style.display = 'block'
-      list.innerHTML = history.map((h, i) => `
-        <div class="history-item" onclick="loadHistory(${i})">
-          <img src="${h.thumb}" alt="" />
-          <span class="hname">${h.name}</span>
-          <span class="htime">${timeAgo(h.time)}</span>
-        </div>
-      `).join('')
-    }
-
-    function loadHistory(i) {
-      currentJSON = history[i].json
+      const data = await res.json()
+      currentJSON = data.prompt
       renderJSON(currentJSON)
+      document.getElementById('json-empty').style.display = 'none'
       document.getElementById('json-output').style.display = 'block'
-      document.getElementById('empty-state').style.display = 'none'
       document.getElementById('btn-copy').style.display = 'flex'
       document.getElementById('btn-dl').style.display = 'flex'
-      setStatus('ready', `Loaded: ${history[i].name}`)
-    }
+      document.getElementById('btn-gen-img').disabled = false
+      setSteps(2)
 
-    // ── Helpers ───────────────────────────────────────────────
-    // Compress image to stay under Vercel's 4.5 MB body limit
-    function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const MAX_BYTES = 3 * 1024 * 1024 // 3 MB base64 target (~4 MB encoded)
-        const img = new Image()
-        const url = URL.createObjectURL(file)
-        img.onload = () => {
-          URL.revokeObjectURL(url)
-          let { width, height } = img
-          // Scale down if needed
-          const MAX_DIM = 1920
-          if (width > MAX_DIM || height > MAX_DIM) {
-            const ratio = Math.min(MAX_DIM / width, MAX_DIM / height)
-            width = Math.round(width * ratio)
-            height = Math.round(height * ratio)
-          }
-          const canvas = document.createElement('canvas')
-          canvas.width = width
-          canvas.height = height
-          canvas.getContext('2d').drawImage(img, 0, 0, width, height)
-          // Try quality 0.85 first, reduce if still too big
-          let quality = 0.85
-          let dataUrl = canvas.toDataURL('image/jpeg', quality)
-          while (dataUrl.length * 0.75 > MAX_BYTES && quality > 0.3) {
-            quality -= 0.1
-            dataUrl = canvas.toDataURL('image/jpeg', quality)
-          }
-          resolve(dataUrl.split(',')[1])
-        }
-        img.onerror = reject
-        img.src = url
+    } catch (err) {
+      showError('p2-error', err.message)
+    } finally {
+      btn.disabled = false; sp.style.display = 'none'; txt.textContent = '⚡ Analyze & Generate JSON'
+    }
+  }
+
+  // ── Step 2: JSON → Imagen ─────────────────────────────────
+  async function generateImage() {
+    if (!currentJSON) return
+    const apiKey = document.getElementById('gemini-key').value.trim()
+    if (!apiKey) {
+      showError('p3-error', 'Enter your Gemini API key in the top bar.')
+      return
+    }
+    clearError('p3-error')
+
+    // Buttons
+    const btnMain = document.getElementById('btn-gen-img')
+    const btnRegen = document.getElementById('btn-regen')
+    const sp2 = document.getElementById('sp2')
+    const sp3 = document.getElementById('sp3')
+    const txt2 = document.getElementById('btn-gen-txt')
+    const txt3 = document.getElementById('btn-regen-txt')
+
+    btnMain.disabled = true; btnRegen.disabled = true
+    sp2.style.display = 'block'; sp3.style.display = 'block'
+    txt2.textContent = 'Generating…'; txt3.textContent = 'Generating…'
+    setGenStatus('loading', 'Gemini is painting…')
+
+    try {
+      const res = await fetch(`${API}/api/generate-image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: currentJSON, apiKey })
       })
-    }
 
-    function setStatus(type, text) {
-      const dot = document.getElementById('status-dot')
-      dot.className = 'status-dot' + (type ? ' ' + type : '')
-      document.getElementById('status-text').textContent = text
-    }
-
-    function formatSize(bytes) {
-      if (bytes < 1024) return bytes + ' B'
-      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB'
-      return (bytes / 1048576).toFixed(1) + ' MB'
-    }
-
-    function timeAgo(date) {
-      const s = Math.floor((new Date() - date) / 1000)
-      if (s < 60) return 'just now'
-      if (s < 3600) return Math.floor(s/60) + 'm ago'
-      return Math.floor(s/3600) + 'h ago'
-    }
-
-    // ── Paste support ─────────────────────────────────────────
-    document.addEventListener('paste', e => {
-      const items = e.clipboardData?.items
-      if (!items) return
-      for (const item of items) {
-        if (item.type.startsWith('image/')) {
-          loadFile(item.getAsFile())
-          break
-        }
+      if (!res.ok) {
+        let msg = `Gemini error ${res.status}`
+        try { msg = (await res.json()).error || msg } catch {}
+        throw new Error(msg)
       }
+
+      const data = await res.json()
+      currentImageB64 = data.imageBase64
+      const src = `data:${data.mimeType};base64,${data.imageBase64}`
+      document.getElementById('gen-img').src = src
+
+      // Show prompt used
+      document.getElementById('prompt-text').textContent = data.prompt
+      document.getElementById('prompt-preview').style.display = 'block'
+
+      document.getElementById('gen-empty').style.display = 'none'
+      document.getElementById('gen-image-wrap').style.display = 'flex'
+      document.getElementById('btn-gen-img').style.display = 'none'
+      setGenStatus('ready', 'Image generated ✓')
+      setSteps(3)
+
+    } catch (err) {
+      showError('p3-error', err.message)
+      setGenStatus('', 'Error')
+    } finally {
+      btnMain.disabled = false; btnRegen.disabled = false
+      sp2.style.display = 'none'; sp3.style.display = 'none'
+      txt2.textContent = '🎨 Generate Image'; txt3.textContent = '🔄 Regenerate'
+    }
+  }
+
+  // ── Helpers ───────────────────────────────────────────────
+  function renderJSON(obj) {
+    document.getElementById('json-tree').innerHTML = syntaxHighlight(JSON.stringify(obj, null, 2))
+  }
+
+  function syntaxHighlight(json) {
+    json = json.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      let cls = 'json-num'
+      if (/^"/.test(m)) cls = /:$/.test(m) ? 'json-key' : 'json-str'
+      else if (/true|false/.test(m)) cls = 'json-bool'
+      else if (/null/.test(m)) cls = 'json-null'
+      return `<span class="${cls}">${m}</span>`
     })
-  </script>
+  }
+
+  function copyJSON() {
+    if (!currentJSON) return
+    navigator.clipboard.writeText(JSON.stringify(currentJSON, null, 2))
+    const btn = document.getElementById('btn-copy')
+    btn.textContent = '✓ Copied!'
+    setTimeout(() => btn.innerHTML = '📋 Copy', 2000)
+  }
+
+  function downloadJSON() {
+    if (!currentJSON) return
+    const name = (currentFile?.name || 'prompt').replace(/\.[^.]+$/, '')
+    const blob = new Blob([JSON.stringify(currentJSON, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob); a.download = `nb-${name}.json`; a.click()
+  }
+
+  function downloadImage() {
+    if (!currentImageB64) return
+    const a = document.createElement('a')
+    a.href = `data:image/png;base64,${currentImageB64}`
+    a.download = `gemini-${Date.now()}.png`; a.click()
+  }
+
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const MAX_BYTES = 3 * 1024 * 1024
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        let { width, height } = img
+        const MAX_DIM = 1920
+        if (width > MAX_DIM || height > MAX_DIM) {
+          const r = Math.min(MAX_DIM/width, MAX_DIM/height)
+          width = Math.round(width*r); height = Math.round(height*r)
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width; canvas.height = height
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+        let q = 0.85
+        let dataUrl = canvas.toDataURL('image/jpeg', q)
+        while (dataUrl.length * 0.75 > MAX_BYTES && q > 0.3) {
+          q -= 0.1; dataUrl = canvas.toDataURL('image/jpeg', q)
+        }
+        resolve(dataUrl.split(',')[1])
+      }
+      img.onerror = reject; img.src = url
+    })
+  }
+
+  function showError(id, msg) {
+    const el = document.getElementById(id)
+    el.textContent = `Error: ${msg}`; el.style.display = 'block'
+  }
+  function clearError(id) { document.getElementById(id).style.display = 'none' }
+
+  function setGenStatus(type, text) {
+    const dot = document.getElementById('gen-dot')
+    dot.className = 'status-dot' + (type ? ' '+type : '')
+    document.getElementById('gen-status').textContent = text
+  }
+
+  function setSteps(active) {
+    for (let i = 1; i <= 3; i++) {
+      const el = document.getElementById(`step${i}`)
+      el.className = i < active ? 'step-num done' : i === active ? 'step-num active' : 'step-num'
+    }
+  }
+
+  function resetJSON() {
+    document.getElementById('json-empty').style.display = 'flex'
+    document.getElementById('json-output').style.display = 'none'
+    document.getElementById('btn-copy').style.display = 'none'
+    document.getElementById('btn-dl').style.display = 'none'
+    document.getElementById('btn-gen-img').disabled = true
+    clearError('p2-error')
+  }
+
+  function resetImage() {
+    document.getElementById('gen-empty').style.display = 'flex'
+    document.getElementById('gen-image-wrap').style.display = 'none'
+    document.getElementById('btn-gen-img').style.display = 'flex'
+    document.getElementById('prompt-preview').style.display = 'none'
+    clearError('p3-error')
+    setGenStatus('', 'Waiting for JSON')
+    setSteps(1)
+  }
+
+  function formatSize(b) {
+    if (b < 1024) return b+' B'
+    if (b < 1048576) return (b/1024).toFixed(1)+' KB'
+    return (b/1048576).toFixed(1)+' MB'
+  }
+</script>
 
 </body>
 </html>
