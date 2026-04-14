@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mercado E-learning Argentina — Carrusel</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d0d0d;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      gap: 24px;
+      min-height: 100vh;
+    }
+
+    /* ── Controles ── */
+    .controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .controls button {
+      background: #1e3a5f;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+    .controls button:hover { background: #2d5a8e; }
+    .controls button.primary {
+      background: linear-gradient(135deg, #1a6fc4, #0ea5e9);
+      font-weight: 600;
+    }
+    .controls button.primary:hover { opacity: 0.9; }
+    .slide-label {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.8rem;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    /* ── Contenedor slide ── */
+    .slide-wrapper {
+      width: 540px;   /* mitad de 1080 para pantalla, se exporta a 1080x1350 */
+      height: 675px;
+      overflow: hidden;
+      border-radius: 16px;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+      position: relative;
+    }
+
+    /* ── Slides ── */
+    .slide {
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 56px 52px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .slide.active { display: flex; }
+
+    /* Slide 1 — Gancho */
+    .s1 { background: linear-gradient(160deg, #0a0a1a 0%, #0f2044 50%, #1a0a3e 100%); }
+    .s1::before {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(14,165,233,0.2) 0%, transparent 70%);
+      top: -100px; right: -100px; border-radius: 50%;
+    }
+    .s1::after {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%);
+      bottom: -80px; left: -80px; border-radius: 50%;
+    }
+    .s1 .tag {
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #0ea5e9;
+      margin-bottom: 24px;
+      position: relative; z-index: 1;
+    }
+    .s1 h2 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.15;
+      margin-bottom: 28px;
+      position: relative; z-index: 1;
+    }
+    .s1 h2 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .s1 .sub {
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.7;
+      position: relative; z-index: 1;
+    }
+    .s1 .badge {
+      margin-top: 28px;
+      background: rgba(14,165,233,0.12);
+      border: 1px solid rgba(14,165,233,0.3);
+      color: #0ea5e9;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 8px 20px;
+      border-radius: 100px;
+      position: relative; z-index: 1;
+    }
+
+    /* Slide 2 — Mercado */
+    .s2 { background: #060b18; }
+    .s2 .header-tag {
+      font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase;
+      color: #0ea5e9; margin-bottom: 16px;
+    }
+    .s2 h2 {
+      font-size: 1.25rem; font-weight: 700; color: #fff;
+      line-height: 1.25; margin-bottom: 36px;
+    }
+    .metrics {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+      width: 100%;
+    }
+    .metric {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 18px 14px;
+      text-align: center;
+    }
+    .metric .val {
+      font-size: 1.5rem; font-weight: 800;
+      background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      line-height: 1; margin-bottom: 6px;
+    }
+    .metric .lbl { font-size: 0.68rem; color: rgba(255,255,255,0.45); line-height: 1.4; }
+    .metric.accent { border-color: rgba(139,92,246,0.3); }
+    .metric.accent .val {
+      background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .s2 .note {
+      margin-top: 20px;
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.3);
+      line-height: 1.5;
+    }
+
+    /* Slide 3 — IA */
+    .s3 { background: linear-gradient(160deg, #0a1628, #0d2137); }
+    .s3 .header-tag { font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase; color: #a78bfa; margin-bottom: 16px; }
+    .s3 h2 { font-size: 1.3rem; font-weight: 700; color: #fff; line-height: 1.25; margin-bottom: 10px; }
+    .s3 .intro { font-size: 0.8rem; color: rgba(255,255,255,0.45); margin-bottom: 28px; line-height: 1.6; }
+    .ai-stats {
+      display: flex; gap: 16px; width: 100%; margin-bottom: 24px;
+    }
+    .ai-stat {
+      flex: 1;
+      background: rgba(139,92,246,0.08);
+      border: 1px solid rgba(139,92,246,0.25);
+      border-radius: 12px;
+      padding: 18px 12px;
+      text-align: center;
+    }
+    .ai-stat .big {
+      font-size: 2rem; font-weight: 900;
+      color: #a78bfa; line-height: 1; margin-bottom: 6px;
+    }
+    .ai-stat .desc { font-size: 0.68rem; color: rgba(255,255,255,0.5); line-height: 1.4; }
+    .ai-apps { width: 100%; }
+    .ai-app {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      text-align: left;
+    }
+    .ai-app:last-child { border-bottom: none; }
+    .ai-app .dot { width: 6px; height: 6px; border-radius: 50%; background: #a78bfa; margin-top: 5px; flex-shrink: 0; }
+    .ai-app p { font-size: 0.75rem; color: rgba(255,255,255,0.65); line-height: 1.5; }
+    .ai-app strong { color: #fff; }
+
+    /* Slide 4 — Microlearning */
+    .s4 { background: #03070f; }
+    .s4 .header-tag { font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase; color: #10b981; margin-bottom: 16px; }
+    .s4 h2 { font-size: 1.3rem; font-weight: 700; color: #fff; line-height: 1.25; margin-bottom: 24px; }
+    .micro-stat {
+      background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 24px;
+      width: 100%;
+    }
+    .micro-stat .big { font-size: 2.8rem; font-weight: 900; color: #10b981; line-height: 1; }
+    .micro-stat .desc { font-size: 0.78rem; color: rgba(255,255,255,0.55); margin-top: 4px; }
+    .micro-items { width: 100%; }
+    .micro-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      text-align: left;
+    }
+    .micro-item:last-child { border-bottom: none; }
+    .micro-item .icon { font-size: 1.2rem; flex-shrink: 0; }
+    .micro-item p { font-size: 0.78rem; color: rgba(255,255,255,0.7); line-height: 1.4; }
+    .micro-item strong { color: #10b981; }
+
+    /* Slide 5 — Incentivos fiscales */
+    .s5 { background: linear-gradient(160deg, #0a1a0a, #0d2810); }
+    .s5 .header-tag { font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase; color: #fbbf24; margin-bottom: 16px; }
+    .s5 h2 { font-size: 1.25rem; font-weight: 700; color: #fff; line-height: 1.25; margin-bottom: 24px; }
+    .fiscal-items { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+    .fiscal-item {
+      background: rgba(251,191,36,0.06);
+      border: 1px solid rgba(251,191,36,0.18);
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .fiscal-item .pct {
+      font-size: 1.4rem; font-weight: 900;
+      color: #fbbf24;
+      min-width: 52px;
+      line-height: 1;
+    }
+    .fiscal-item .info {}
+    .fiscal-item .info .title { font-size: 0.78rem; font-weight: 600; color: #fff; margin-bottom: 2px; }
+    .fiscal-item .info .desc { font-size: 0.68rem; color: rgba(255,255,255,0.45); line-height: 1.4; }
+    .s5 .tip {
+      margin-top: 18px;
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.35);
+      line-height: 1.5;
+      text-align: center;
+    }
+    .s5 .tip strong { color: #fbbf24; }
+
+    /* Slide 6 — Sectores */
+    .s6 { background: #08050f; }
+    .s6 .header-tag { font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase; color: #f472b6; margin-bottom: 16px; }
+    .s6 h2 { font-size: 1.25rem; font-weight: 700; color: #fff; line-height: 1.25; margin-bottom: 24px; }
+    .sectors { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+    .sector {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-left: 3px solid;
+      border-radius: 0 10px 10px 0;
+      text-align: left;
+    }
+    .sector .icon { font-size: 1.3rem; flex-shrink: 0; }
+    .sector .txt .name { font-size: 0.82rem; font-weight: 600; color: #fff; margin-bottom: 2px; }
+    .sector .txt .need { font-size: 0.68rem; color: rgba(255,255,255,0.45); line-height: 1.3; }
+    .sector-1 { border-left-color: #0ea5e9; }
+    .sector-2 { border-left-color: #a78bfa; }
+    .sector-3 { border-left-color: #10b981; }
+    .sector-4 { border-left-color: #fbbf24; }
+
+    /* Slide 7 — CTA */
+    .s7 { background: linear-gradient(160deg, #0a0a1a, #0f1f3d); }
+    .s7::before {
+      content: '';
+      position: absolute;
+      width: 350px; height: 350px;
+      background: radial-gradient(circle, rgba(14,165,233,0.15) 0%, transparent 70%);
+      top: -80px; right: -80px; border-radius: 50%;
+    }
+    .s7 .header-tag {
+      font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase;
+      color: #0ea5e9; margin-bottom: 20px; position: relative; z-index: 1;
+    }
+    .s7 h2 {
+      font-size: 1.65rem; font-weight: 800; color: #fff;
+      line-height: 1.2; margin-bottom: 20px; position: relative; z-index: 1;
+    }
+    .s7 h2 em {
+      font-style: normal;
+      background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .s7 p {
+      font-size: 0.85rem; color: rgba(255,255,255,0.5);
+      line-height: 1.7; margin-bottom: 32px;
+      position: relative; z-index: 1;
+    }
+    .s7 .cta-box {
+      background: linear-gradient(135deg, #0ea5e9, #2563eb);
+      border-radius: 12px;
+      padding: 18px 28px;
+      position: relative; z-index: 1;
+      width: 100%;
+    }
+    .s7 .cta-box .question {
+      font-size: 0.95rem; font-weight: 700; color: #fff;
+      margin-bottom: 8px;
+    }
+    .s7 .cta-box .action {
+      font-size: 0.75rem; color: rgba(255,255,255,0.75);
+    }
+    .s7 .hashtags {
+      margin-top: 22px;
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.25);
+      line-height: 1.8;
+      position: relative; z-index: 1;
+    }
+
+    /* ── Barra de progreso ── */
+    .progress {
+      display: flex; gap: 6px;
+    }
+    .pip {
+      height: 3px; border-radius: 2px;
+      background: rgba(255,255,255,0.15);
+      cursor: pointer;
+      transition: all 0.3s;
+      flex: 1;
+    }
+    .pip.active { background: #0ea5e9; }
+
+    /* ── Download status ── */
+    #status {
+      color: rgba(255,255,255,0.45);
+      font-size: 0.75rem;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="progress" id="progress">
+    <div class="pip active" onclick="goTo(0)"></div>
+    <div class="pip" onclick="goTo(1)"></div>
+    <div class="pip" onclick="goTo(2)"></div>
+    <div class="pip" onclick="goTo(3)"></div>
+    <div class="pip" onclick="goTo(4)"></div>
+    <div class="pip" onclick="goTo(5)"></div>
+    <div class="pip" onclick="goTo(6)"></div>
+  </div>
+
+  <div class="slide-wrapper" id="slideWrapper">
+
+    <!-- SLIDE 1 — GANCHO -->
+    <div class="slide s1 active">
+      <div class="tag">Investigación de Mercado · Argentina 2024–2026</div>
+      <h2>El e-learning corporativo en LATAM ya mueve<br><em>más de USD 1.400 millones</em><br>¿Tu empresa ya subió al tren?</h2>
+      <p class="sub">El mercado de capacitación online crece al 17% anual y redefine cómo las organizaciones desarrollan talento en Argentina.</p>
+      <div class="badge">CAGR 17,08% proyectado hasta 2033</div>
+    </div>
+
+    <!-- SLIDE 2 — MERCADO -->
+    <div class="slide s2">
+      <div class="header-tag">El tamaño del mercado</div>
+      <h2>Los números que todo líder de RR.HH. debería conocer</h2>
+      <div class="metrics">
+        <div class="metric">
+          <div class="val">USD 21.400M</div>
+          <div class="lbl">Mercado LMS Global 2024</div>
+        </div>
+        <div class="metric accent">
+          <div class="val">USD 4.200M</div>
+          <div class="lbl">E-learning LATAM 2024</div>
+        </div>
+        <div class="metric">
+          <div class="val">52M</div>
+          <div class="lbl">Usuarios de educación online en LATAM</div>
+        </div>
+        <div class="metric accent">
+          <div class="val">+60%</div>
+          <div class="lbl">Ahorro vs. capacitación presencial</div>
+        </div>
+      </div>
+      <p class="note">El segmento corporativo lidera el consumo, superando al ámbito académico tradicional en toda la región.</p>
+    </div>
+
+    <!-- SLIDE 3 — IA -->
+    <div class="slide s3">
+      <div class="header-tag">Inteligencia Artificial en capacitación</div>
+      <h2>La IA no reemplaza al instructor.<br>Hace que cada empleado aprenda más rápido.</h2>
+      <p class="intro">En Argentina, el uso de IA en formación corporativa ya tiene resultados comprobados:</p>
+      <div class="ai-stats">
+        <div class="ai-stat">
+          <div class="big">+26%</div>
+          <div class="desc">Retención del conocimiento</div>
+        </div>
+        <div class="ai-stat">
+          <div class="big">+45%</div>
+          <div class="desc">Efectividad del programa</div>
+        </div>
+      </div>
+      <div class="ai-apps">
+        <div class="ai-app"><div class="dot"></div><p><strong>Personalización dinámica:</strong> itinerarios adaptados en tiempo real por IA según el desempeño individual.</p></div>
+        <div class="ai-app"><div class="dot"></div><p><strong>Tutores IA 24/7:</strong> asistentes que simulan escenarios de ventas o responden consultas técnicas.</p></div>
+        <div class="ai-app"><div class="dot"></div><p><strong>Creación de cursos exprés:</strong> de documentación interna a módulo de aprendizaje en minutos.</p></div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4 — MICROLEARNING -->
+    <div class="slide s4">
+      <div class="header-tag">Microlearning y aprendizaje en el flujo</div>
+      <h2>La capacitación del futuro no interrumpe el trabajo.<br>Se integra en él.</h2>
+      <div class="micro-stat">
+        <div class="big">17%</div>
+        <div class="desc">más eficaz que los métodos de formación tradicionales</div>
+      </div>
+      <div class="micro-items">
+        <div class="micro-item"><span class="icon">⚡</span><p>Cápsulas de <strong>menos de 5 minutos</strong> entregadas donde el equipo ya trabaja: Slack, Teams o WhatsApp.</p></div>
+        <div class="micro-item"><span class="icon">🎮</span><p><strong>Gamificación avanzada:</strong> el 83% de los empleados dice que aprende más motivado con mecánicas de juego.</p></div>
+        <div class="micro-item"><span class="icon">📱</span><p><strong>Mobile learning</strong> con CAGR del 36% global — en Argentina reforzado por la alta penetración de smartphones.</p></div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5 — INCENTIVOS FISCALES -->
+    <div class="slide s5">
+      <div class="header-tag">Marco regulatorio · Argentina</div>
+      <h2>El Estado paga parte de tu inversión en capacitación. ¿Ya lo sabías?</h2>
+      <div class="fiscal-items">
+        <div class="fiscal-item">
+          <div class="pct">-60%</div>
+          <div class="info">
+            <div class="title">Ley de Economía del Conocimiento</div>
+            <div class="desc">Reducción en Impuesto a las Ganancias para empresas de software educativo registradas.</div>
+          </div>
+        </div>
+        <div class="fiscal-item">
+          <div class="pct">0%</div>
+          <div class="info">
+            <div class="title">Retenciones a la exportación</div>
+            <div class="desc">Alícuota cero para servicios digitales y e-learning exportados.</div>
+          </div>
+        </div>
+        <div class="fiscal-item">
+          <div class="pct">30%</div>
+          <div class="info">
+            <div class="title">Crédito Fiscal para Capacitación</div>
+            <div class="desc">MiPyMEs recuperan hasta el 30% de la masa salarial anual invertida en formación.</div>
+          </div>
+        </div>
+      </div>
+      <p class="tip">La combinación correcta de beneficios puede cubrir <strong>hasta el 100%</strong> de la inversión en tecnología educativa.</p>
+    </div>
+
+    <!-- SLIDE 6 — SECTORES -->
+    <div class="slide s6">
+      <div class="header-tag">Sectores con mayor inversión en e-learning</div>
+      <h2>¿Tu industria ya está capacitando online?<br>Estas son las que lideran.</h2>
+      <div class="sectors">
+        <div class="sector sector-1">
+          <span class="icon">💻</span>
+          <div class="txt">
+            <div class="name">Software y Tecnología</div>
+            <div class="need">Reskilling en IA, Prompt Engineering e inglés para exportar servicios.</div>
+          </div>
+        </div>
+        <div class="sector sector-2">
+          <span class="icon">🏦</span>
+          <div class="txt">
+            <div class="name">Fintech y Servicios Financieros</div>
+            <div class="need">Compliance, ciberseguridad y prevención de lavado de activos.</div>
+          </div>
+        </div>
+        <div class="sector sector-3">
+          <span class="icon">🛒</span>
+          <div class="txt">
+            <div class="name">E-commerce y Logística</div>
+            <div class="need">Perfiles especializados para gestión de tiendas online y última milla.</div>
+          </div>
+        </div>
+        <div class="sector sector-4">
+          <span class="icon">⚡</span>
+          <div class="txt">
+            <div class="name">Energías Renovables</div>
+            <div class="need">Blended learning para formación técnica en infraestructuras verdes.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7 — CTA -->
+    <div class="slide s7">
+      <div class="header-tag">El momento de actuar es ahora</div>
+      <h2>Argentina se consolida como hub de<br><em>innovación en educación digital.</em></h2>
+      <p>Las empresas que adopten ecosistemas de aprendizaje inteligentes hoy tendrán la ventaja competitiva decisiva en los próximos 5 años.</p>
+      <div class="cta-box">
+        <div class="question">¿Cuánto invierte tu empresa en capacitación online?</div>
+        <div class="action">Cuéntanos en los comentarios 👇 — guardá este carrusel para compartirlo con tu equipo.</div>
+      </div>
+      <div class="hashtags">
+        #elearning #capacitacioncorporativa #RRHHargentina #LMS<br>
+        #transformaciondigital #talentohumano #formacion #argentina
+      </div>
+    </div>
+
+  </div><!-- /slide-wrapper -->
+
+  <div class="controls">
+    <button onclick="prev()">← Anterior</button>
+    <span class="slide-label" id="slideLabel">1 / 7</span>
+    <button onclick="next()">Siguiente →</button>
+    <button class="primary" onclick="downloadCurrent()">⬇ Descargar slide actual</button>
+    <button class="primary" onclick="downloadAll()">⬇ Descargar todas (ZIP)</button>
+  </div>
+
+  <div id="status"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script>
+    let current = 0
+    const total = 7
+    const slides = document.querySelectorAll('.slide')
+    const pips = document.querySelectorAll('.pip')
+    const label = document.getElementById('slideLabel')
+    const statusEl = document.getElementById('status')
+
+    const slideNames = [
+      '01-gancho',
+      '02-mercado-numeros',
+      '03-ia-capacitacion',
+      '04-microlearning',
+      '05-incentivos-fiscales',
+      '06-sectores',
+      '07-cta'
+    ]
+
+    function goTo(i) {
+      slides[current].classList.remove('active')
+      pips[current].classList.remove('active')
+      current = i
+      slides[current].classList.add('active')
+      pips[current].classList.add('active')
+      label.textContent = `${current + 1} / ${total}`
+    }
+
+    function next() { goTo((current + 1) % total) }
+    function prev() { goTo((current - 1 + total) % total) }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight') next()
+      if (e.key === 'ArrowLeft') prev()
+    })
+
+    // Captura el slide visible a 1080x1350
+    async function captureSlide(index) {
+      goTo(index)
+      await new Promise(r => setTimeout(r, 120))
+      const wrapper = document.getElementById('slideWrapper')
+      const canvas = await html2canvas(wrapper, {
+        scale: 2,          // 540*2 = 1080px
+        width: 540,
+        height: 675,
+        useCORS: true,
+        backgroundColor: null,
+        logging: false
+      })
+      return canvas
+    }
+
+    async function downloadCurrent() {
+      statusEl.textContent = 'Generando PNG...'
+      try {
+        const canvas = await captureSlide(current)
+        const link = document.createElement('a')
+        link.download = `mercado-elearning-${slideNames[current]}.png`
+        link.href = canvas.toDataURL('image/png')
+        link.click()
+        statusEl.textContent = `✓ Slide ${current + 1} descargada.`
+      } catch(e) {
+        statusEl.textContent = 'Error al generar la imagen.'
+        console.error(e)
+      }
+    }
+
+    async function downloadAll() {
+      statusEl.textContent = 'Generando todas las slides… (puede tardar unos segundos)'
+      try {
+        const zip = new JSZip()
+        const folder = zip.folder('mercado-elearning-carrusel')
+        for (let i = 0; i < total; i++) {
+          statusEl.textContent = `Procesando slide ${i + 1} de ${total}…`
+          const canvas = await captureSlide(i)
+          const blob = await new Promise(r => canvas.toBlob(r, 'image/png'))
+          folder.file(`${slideNames[i]}.png`, blob)
+        }
+        statusEl.textContent = 'Comprimiendo ZIP…'
+        const content = await zip.generateAsync({ type: 'blob' })
+        const link = document.createElement('a')
+        link.download = 'mercado-elearning-instagram.zip'
+        link.href = URL.createObjectURL(content)
+        link.click()
+        statusEl.textContent = '✓ ZIP descargado con las 7 slides.'
+        goTo(0)
+      } catch(e) {
+        statusEl.textContent = 'Error al generar el ZIP.'
+        console.error(e)
+      }
+    }
+  </script>
+
+</body>
+</html>
