@@ -50,32 +50,6 @@
       letter-spacing: 0.1em; padding: 3px 8px;
       border-radius: 4px; text-transform: uppercase;
     }
-    .api-key-input {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .api-key-input label {
-      font-size: 0.65rem;
-      color: var(--muted);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-    .api-key-input input {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 0.72rem;
-      padding: 6px 12px;
-      border-radius: 6px;
-      width: 260px;
-      transition: border 0.2s;
-    }
-    .api-key-input input:focus { outline: none; border-color: var(--gemini); }
-    .api-key-input input::placeholder { color: var(--muted); }
 
     /* ── Main: 3 columns ── */
     main {
@@ -281,10 +255,6 @@
   <div class="logo">Nano <span>Banana</span> Pro</div>
   <div class="badge">JSON</div>
   <div class="gemini-badge">+ Imagen</div>
-  <div class="api-key-input">
-    <label>Gemini API Key</label>
-    <input type="password" id="gemini-key" placeholder="AIza..." autocomplete="off" />
-  </div>
 </header>
 
 <main>
@@ -496,11 +466,6 @@
   // ── Step 2: JSON → Imagen ─────────────────────────────────
   async function generateImage() {
     if (!currentJSON) return
-    const apiKey = document.getElementById('gemini-key').value.trim()
-    if (!apiKey) {
-      showError('p3-error', 'Enter your Gemini API key in the top bar.')
-      return
-    }
     clearError('p3-error')
 
     // Buttons
@@ -520,7 +485,7 @@
       const res = await fetch(`${API}/api/generate-image`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: currentJSON, apiKey })
+        body: JSON.stringify({ prompt: currentJSON })
       })
 
       if (!res.ok) {
