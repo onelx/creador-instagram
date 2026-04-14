@@ -4,15 +4,27 @@
     {
       "src": "api/*.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "*.html",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1.js"
+      "src": "/api/json-prompt",
+      "dest": "/api/json-prompt.js"
     },
     {
-      "src": "/(.*)",
+      "src": "/api/branding",
+      "dest": "/api/branding.js"
+    },
+    {
+      "src": "/",
+      "dest": "/nano-banana.html"
+    },
+    {
+      "src": "/(.*\\.html)",
       "dest": "/$1"
     }
   ]
