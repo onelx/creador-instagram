@@ -11,24 +11,43 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'prompt is required' })
   }
 
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) {
+    return res.status(500).json({ error: 'GEMINI_API_KEY not configured on server' })
+  }
+
   try {
     const textPrompt = buildTextPrompt(prompt)
-    const encoded = encodeURIComponent(textPrompt)
 
-    // Use Pollinations.ai — free, no API key required
-    const url = `https://image.pollinations.ai/prompt/${encoded}?width=1080&height=1080&nologo=true&seed=${Date.now()}`
-
-    const response = await fetch(url, { signal: AbortSignal.timeout(90000) })
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: textPrompt }] }],
+          generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+        }),
+        signal: AbortSignal.timeout(90000)
+      }
+    )
 
     if (!response.ok) {
-      throw new Error(`Pollinations error ${response.status}`)
+      const err = await response.json().catch(() => ({}))
+      throw new Error(err.error?.message || `Gemini error ${response.status}`)
     }
 
-    const buffer = await response.arrayBuffer()
-    const b64 = Buffer.from(buffer).toString('base64')
-    const mimeType = response.headers.get('content-type') || 'image/jpeg'
+    const data = await response.json()
+    const parts = data.candidates?.[0]?.content?.parts || []
+    const imagePart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'))
+    if (!imagePart) throw new Error('No image returned from Gemini')
 
-    res.json({ ok: true, imageBase64: b64, mimeType, prompt: textPrompt })
+    res.json({
+      ok: true,
+      imageBase64: imagePart.inlineData.data,
+      mimeType: imagePart.inlineData.mimeType,
+      prompt: textPrompt
+    })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: err.message || 'Error generating image' })
